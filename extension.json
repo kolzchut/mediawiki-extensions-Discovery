@@ -1,0 +1,27 @@
+{
+    "name": "Discovery",
+    "version": "0.0.0",
+    "author": [
+        "Tal Koren (Interjet, Kol Zchut)"
+    ],
+    "descriptionmsg": "Discovery-desc",
+    "license-name": "MIT",
+    "type": "other",
+    "AutoloadClasses": {
+        "DiscoveryAPI": "DiscoveryAPI.php",
+        "DiscoveryHooks": "DiscoveryHooks.php"
+    },
+    "APIModules": {
+        "discovery": "DiscoveryAPI"
+    },
+    "ResourceModules": {
+        "ext.discovery.scripts": {
+            "scripts": "extensions/WikiRights/Discovery/modules/scripts/discovery.script.js",
+            "styles": "extensions/WikiRights/Discovery/modules/styles/discovery.style.css"
+        }
+    },
+    "Hooks": {
+        "BeforePageDisplay": "DiscoveryHooks::onBeforePageDisplay"
+    },
+    "manifest_version": 1
+}
