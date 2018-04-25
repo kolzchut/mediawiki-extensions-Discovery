@@ -10,6 +10,10 @@ class DiscoveryAPI extends ApiBase {
 
     protected $seeAlso = [];
 
+    protected $wgTitle;
+
+    protected $generalCampaign = 'כללי';
+
     const MAX_SEE_ALSO_ITEMS = 2;
 
     const MAX_AD_ITEMS = 2;
@@ -31,7 +35,8 @@ class DiscoveryAPI extends ApiBase {
         $queryResult = $this->getResult();
         $params = $this->extractRequestParams();
         $title = $params['title'];
-        $this->currentUrl = Title::newFromText($title)->getFullURL();
+        $this->wgTitle = Title::newFromText($title);
+        $this->currentUrl = $this->wgTitle->getFullURL();
 
         // Get 'see also' item IDs
         $seeAlsoTitleKeys = $this->getRelevantArticles($params['title'], 2);
@@ -53,7 +58,9 @@ class DiscoveryAPI extends ApiBase {
         }
 
         // Populate 'see also' array recursively
-        $this->populateSeeAlso();
+        if(count($this->seeAlso) < $this::MAX_SEE_ALSO_ITEMS) {
+            $this->populateSeeAlso();
+        }
 
         // Populate ads array recursively
         $this->populateAds();
@@ -66,16 +73,26 @@ class DiscoveryAPI extends ApiBase {
         $queryResult->addValue(null, 'discovery', $result);
     }
 
+    /**
+     * Get ads recursively according to active campaigns & categories, and push them to $this->ads array
+     *
+     * @param mixed $timesRun
+     * @return Boolean
+     */
     protected function populateAds($timesRun = 0) {
         $adCount = count($this->ads);
-        $totalToFetch = $this::MAX_AD_ITEMS - $adCount;
+        $totalToFetch = ($this::MAX_SEE_ALSO_ITEMS - count($this->seeAlso)) + $this::MAX_AD_ITEMS - $adCount;
 
         $ads = $this->getRandomAdsFromCampaigns($this->campaigns, $totalToFetch);
 
-        if ($timesRun < 3 && !empty($ads)) {
+        if ($timesRun < 10 && !empty($ads)) {
             foreach ($ads as $key => $value) {
-                if ($value['url'] !== $this->currentUrl 
-                    && $this->isUniqueInArray($this->ads, 'url', $value['url']) 
+                if (
+                    // if current ad url isn't similar to the current page url
+                    $value['url'] !== $this->currentUrl
+                    // if current ad url doesn't exist in $this->ads
+                    && $this->isUniqueInArray($this->ads, 'url', $value['url'])
+                    // if current ad url doesn't exist in $this->seeAlso
                     && $this->isUniqueInArray($this->seeAlso, 'url', $value['url'])) {
                     $this->ads[] = $value;
                 } else {
@@ -84,17 +101,20 @@ class DiscoveryAPI extends ApiBase {
             }
         }
 
+        // if $this->ads is filled, return
         if (count($this->ads) >= $this::MAX_AD_ITEMS) {
             return true;
         }
 
-        $totalToFetch = $this::MAX_AD_ITEMS - $adCount;
-        $ads = $this->getRandomAdsFromCampaigns(['כללי'], $totalToFetch);
+        // if $this->ads isn't filled, continue populating with ads from 'general' campaign
+        $adCount = count($this->ads);
+        $totalToFetch = ($this::MAX_SEE_ALSO_ITEMS - count($this->seeAlso)) + $this::MAX_AD_ITEMS - $adCount;
+        $ads = $this->getRandomAdsFromCampaigns([$this->generalCampaign], $totalToFetch);
 
         if (!empty($ads)) {
             foreach ($ads as $key => $value) {
-                if ($value['url'] !== $this->currentUrl 
-                    && $this->isUniqueInArray($this->ads, 'url', $value['url']) 
+                if ($value['url'] !== $this->currentUrl
+                    && $this->isUniqueInArray($this->ads, 'url', $value['url'])
                     && $this->isUniqueInArray($this->seeAlso, 'url', $value['url'])) {
                     $this->ads[] = $value;
                 } else {
@@ -109,13 +129,15 @@ class DiscoveryAPI extends ApiBase {
     protected function populateSeeAlso($timesRun = 0) {
         $seeAlsoCount = count($this->seeAlso);
         $totalToFetch = $this::MAX_SEE_ALSO_ITEMS - $seeAlsoCount;
+        $ads = $this->getRelevantArticles($this->wgTitle->mTextform);
+        $seeAlsoTitles = $this->getTitlesFromTitleStrings($ads);
+        $ads = $this->getSeeAlsoItemData($seeAlsoTitles);
 
-        $ads = $this->getRandomAdsFromCampaigns($this->campaigns, $totalToFetch);
-
-        if($timesRun < 3 && !empty($ads)) {
+        if($timesRun < 10 && $ads) {
             foreach ($ads as $key => $value) {
-                if($value['url'] !== $this->currentUrl 
-                    && $this->isUniqueInArray($this->seeAlso, 'url', $value['url']) 
+                if ($value['url']
+                    && $value['url'] !== $this->currentUrl
+                    && $this->isUniqueInArray($this->seeAlso, 'url', $value['url'])
                     && $this->isUniqueInArray($this->ads, 'url', $value['url'])) {
                     $this->seeAlso[] = $value;
                 } else {
@@ -124,26 +146,7 @@ class DiscoveryAPI extends ApiBase {
             }
         }
 
-        if(count($this->seeAlso) >= $this::MAX_SEE_ALSO_ITEMS) {
-            return true;
-        }
-
-        $totalToFetch = $this::MAX_SEE_ALSO_ITEMS - $seeAlsoCount;
-        $ads = $this->getRandomAdsFromCampaigns(['כללי'], $totalToFetch);
-
-        if(!empty($ads)) {
-            foreach ($ads as $key => $value) {
-                if ($value['url'] !== $this->currentUrl 
-                    && $this->isUniqueInArray($this->seeAlso, 'url', $value['url']) 
-                    && $this->isUniqueInArray($this->ads, 'url', $value['url'])) {
-                    $this->seeAlso[] = $value;
-                } else {
-                    $this->populateSeeAlso($timesRun + 1);
-                }
-            }
-        }
-
-        return !!(count($this->seeAlso) >= $this::MAX_SEE_ALSO_ITEMS);
+        return count($this->seeAlso) >= $this::MAX_SEE_ALSO_ITEMS;
     }
 
     /**
@@ -213,11 +216,14 @@ class DiscoveryAPI extends ApiBase {
         $ads = [];
         foreach ($campaigns as $campaign) {
             $campaign = new AdCampaign($campaign);
-            $campaign_ads = $campaign->getAds();
 
-            foreach ($campaign_ads as $ad) {
-                $ad = Ad::fromName($ad['name']);
-                $ads[] = $this->getAdData($ad);
+            if($campaign->isEnabled()) {
+                $campaign_ads = $campaign->getAds();
+
+                foreach ($campaign_ads as $ad) {
+                    $ad = Ad::fromName($ad['name']);
+                    $ads[] = $this->getAdData($ad);
+                }
             }
         }
 
@@ -228,7 +234,7 @@ class DiscoveryAPI extends ApiBase {
      * getCampaignsByCategories
      *
      * @param mixed $categories
-     * @return void
+     * @return Array
      */
     public function getCampaignsByCategories($categories) {
         $campaigns = AdCampaign::getAllCampaignNames();
@@ -236,7 +242,7 @@ class DiscoveryAPI extends ApiBase {
         $campaigns = array_intersect($categories, $campaigns);
         $result = array_values($campaigns);
 
-        return !empty($result) ? $result : false;
+        return !empty($result) ? $result : [];
     }
 
     /**
@@ -258,7 +264,7 @@ class DiscoveryAPI extends ApiBase {
             'content'    => $ad->getBodyContent(),
             'url'        => $url,
             'indicators' => [
-                'new' => (strpos($ad->getCaption(), 'חדש') > -1) ? 1 : 0
+                'new' => (int)$ad->isNew()
             ]
         ];
     }
@@ -292,17 +298,25 @@ class DiscoveryAPI extends ApiBase {
      * @return Array
      */
     public static function getRelevantArticles(String $title, Int $limit = 2) {
-        $semanticData = self::getSemanticData($title) ;
+        $semanticData = self::getSemanticData($title);
 
         if(!key_exists('ראו גם', $semanticData) || empty($semanticData['ראו גם'])) {
             return [];
         }
 
-        $limitedKeys = array_rand($semanticData['ראו גם'], $limit);
+        $results = $semanticData['ראו גם'];
+        shuffle($results);
+
+        $limit = (count($results) < $limit) ? count($results) : $limit;
+        $limitedKeys = array_rand($results, $limit);
         $data = [];
 
-        foreach ($limitedKeys as $key => $value) {
-            $data[] = $semanticData['ראו גם'][$value];
+        if(is_array($limitedKeys)) {
+            foreach ($limitedKeys as $key => $value) {
+                $data[] = $results[$key];
+            }
+        } else {
+            $data[] = $results[$limitedKeys];
         }
 
         $filteredData = self::removeHashes($data);
