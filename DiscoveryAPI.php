@@ -255,6 +255,7 @@ class DiscoveryAPI extends ApiBase {
         global $wgServer;
 
         if(!$ad) return false;
+        if(!$ad->isNotExpired()) return false;
 
         $url = $ad->getMainLink();
         $url = empty($url) ? null : Skin::makeInternalOrExternalUrl($ad->getMainLink());
