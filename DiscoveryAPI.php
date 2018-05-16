@@ -35,8 +35,8 @@ class DiscoveryAPI extends ApiBase {
 	}
 
 	public function execute() {
-        global $wgPromoterFallbackCampaign;
-        $this->generalCampaign = $wgPromoterFallbackCampaign;
+		global $wgPromoterFallbackCampaign;
+		$this->generalCampaign = $wgPromoterFallbackCampaign;
 
 		$queryResult      = $this->getResult();
 		$params           = $this->extractRequestParams();
@@ -77,8 +77,6 @@ class DiscoveryAPI extends ApiBase {
 		$queryResult->addValue( null, 'discovery', $result );
 	}
 
-	
-
 	/**
 	 * Get ads recursively according to active campaigns & categories, and push them to $this->ads array
 	 *
@@ -89,7 +87,7 @@ class DiscoveryAPI extends ApiBase {
 		$adCount = count( $this->ads );
 		$totalToFetch = ( $this::MAX_SEE_ALSO_ITEMS - count( $this->seeAlso ) ) + $this::MAX_AD_ITEMS - $adCount;
 
-        $ads = $this->getRandomAdsFromCampaigns( $this->campaigns, $totalToFetch );
+		$ads = $this->getRandomAdsFromCampaigns( $this->campaigns, $totalToFetch );
 
 		if ( $timesRun < 10 && !empty( $ads ) ) {
 			foreach ( $ads as $key => $value ) {
@@ -99,7 +97,7 @@ class DiscoveryAPI extends ApiBase {
 					// if current ad url doesn't exist in $this->ads
 					&& $this->isUniqueInArray( $this->ads, 'url', $value['url'] )
 					// if current ad url doesn't exist in $this->seeAlso
-					&& $this->isUniqueInArray( $this->seeAlso, 'url', $value['url']) ) {
+					&& $this->isUniqueInArray( $this->seeAlso, 'url', $value['url'] ) ) {
 					$this->ads[] = $value;
 				} else {
 					$this->populateAds( $timesRun + 1 );
@@ -115,7 +113,7 @@ class DiscoveryAPI extends ApiBase {
 		// if $this->ads isn't filled, continue populating with ads from 'general' campaign
 		$adCount = count( $this->ads );
 		$totalToFetch = ( $this::MAX_SEE_ALSO_ITEMS - count( $this->seeAlso ) ) + $this::MAX_AD_ITEMS - $adCount;
-		$ads = $this->getRandomAdsFromCampaigns( [$this->generalCampaign], $totalToFetch );
+		$ads = $this->getRandomAdsFromCampaigns( [ $this->generalCampaign ], $totalToFetch );
 
 		if ( !empty( $ads ) ) {
 			foreach ( $ads as $key => $value ) {
@@ -171,7 +169,7 @@ class DiscoveryAPI extends ApiBase {
 		}
 
 		$result = [];
-		for ( $i=0; $i < $amount; $i++ ) {
+		for ( $i = 0; $i < $amount; $i++ ) {
 			$randomIndex = array_rand( $ads, 1 );
 			$result[] = $ads[$randomIndex];
 		}
@@ -221,9 +219,9 @@ class DiscoveryAPI extends ApiBase {
 		if ( empty( $campaigns ) ) {
 			return false;
 		}
-		
+
 		$campaigns = str_replace( '_', ' ', $campaigns );
-		
+
 		$ads = [];
 		foreach ( $campaigns as $campaign ) {
 			$campaign = new AdCampaign( $campaign );
@@ -289,14 +287,14 @@ class DiscoveryAPI extends ApiBase {
 	 * @return array
 	 */
 	public function getCategoriesByTitleString( Title $title ) {
-        $categories = $title->getParentCategories();
+		$categories = $title->getParentCategories();
 
-        $categories = array_keys($categories);
-        $categories = array_map(function ($item) {
-            return substr($item, strpos($item, ':') + 1, strlen($item));
-        }, $categories);
+		$categories = array_keys( $categories );
+		$categories = array_map( function ( $item ) {
+			return substr( $item, strpos( $item, ':' ) + 1, strlen( $item ) );
+		}, $categories );
 
-        return empty($categories) ? [] : $categories;
+		return empty( $categories ) ? [] : $categories;
 	}
 
 	/**
@@ -307,8 +305,8 @@ class DiscoveryAPI extends ApiBase {
 	 * @return array
 	 */
 	public static function getRelevantArticles( Title $title, Int $limit = 2 ) {
-        $results = self::getSemanticData( $title, 'ראו גם' );
-    
+		$results = self::getSemanticData( $title, 'ראו גם' );
+
 		shuffle( $results );
 
 		$limit = ( count( $results ) < $limit ) ? count( $results ) : $limit;
@@ -323,8 +321,8 @@ class DiscoveryAPI extends ApiBase {
 			$data[] = $results[$limitedKeys];
 		}
 
-        $filteredData = self::removeHashes( $data );
-        
+		$filteredData = self::removeHashes( $data );
+
 		return $filteredData;
 	}
 
@@ -335,7 +333,7 @@ class DiscoveryAPI extends ApiBase {
 	 * @return array
 	 */
 	public static function removeHashes( array $arr ) {
-		return array_map( function( $item ) {
+		return array_map( function ( $item ) {
 			return preg_replace( '/#\d+#/', '', $item );
 		}, $arr );
 	}
@@ -363,7 +361,7 @@ class DiscoveryAPI extends ApiBase {
 		$store = SMW\StoreFactory::getStore()->getSemanticData( \SMW\DIWikiPage::newFromText( $title->getText() ) );
 
 		$arrSMWProps = $store->getProperties();
-        $arrValues   = [];
+		$arrValues   = [];
 
 		foreach ( $arrSMWProps as $smwProp ) {
 			$arrSMWPropValues = $store->getPropertyValues( $smwProp );
@@ -372,7 +370,7 @@ class DiscoveryAPI extends ApiBase {
 			}
 		}
 
-        return ( $property !== null ) ? $arrValues[$property] : $arrValues;
+		return ( $property !== null ) ? $arrValues[$property] : $arrValues;
 	}
 
 }
