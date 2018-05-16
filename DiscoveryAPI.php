@@ -10,10 +10,12 @@ class DiscoveryAPI extends ApiBase {
 
 	protected $seeAlso = [];
 
-	/* @var Title */
-	protected $wgTitle;
+	protected $seeAlsoTitleKeys = [];
 
-	protected $generalCampaign = 'כללי';
+	/* @var Title */
+	protected $title;
+
+	protected $generalCampaign = '';
 
 	const MAX_SEE_ALSO_ITEMS = 2;
 
@@ -33,25 +35,27 @@ class DiscoveryAPI extends ApiBase {
 	}
 
 	public function execute() {
-		$queryResult = $this->getResult();
-		$params = $this->extractRequestParams();
-		$title = $params['title'];
-		$this->wgTitle = Title::newFromText( $title );
-		$this->currentUrl = $this->wgTitle->getFullURL();
+        global $wgPromoterFallbackCampaign;
+        $this->generalCampaign = $wgPromoterFallbackCampaign;
+
+		$queryResult      = $this->getResult();
+		$params           = $this->extractRequestParams();
+		$this->title      = Title::newFromText( $params['title'] );
+		$this->currentUrl = $this->title->getFullURL();
 
 		// Get 'see also' item IDs
-		$seeAlsoTitleKeys = $this->getRelevantArticles( $params['title'], 2 );
-		if ( empty( $seeAlsoTitleKeys ) ) {
+		$this->seeAlsoTitleKeys = $this->getRelevantArticles( $this->title, 2 );
+		if ( empty( $this->seeAlsoTitleKeys ) ) {
 			$this->seeAlso = [];
 		} else {
 			// Get 'see also' items by given IDs
-			$seeAlsoTitles = $this->getTitlesFromTitleStrings( $seeAlsoTitleKeys );
+			$seeAlsoTitles = $this->getTitlesFromTitleStrings( $this->seeAlsoTitleKeys );
 
 			// Parse 'see also' items to key->value objects
 			$this->seeAlso = $this->getSeeAlsoItemData( $seeAlsoTitles );
 
 			// Get page categories
-			$categories = $this->getCategoriesByTitleString( $title );
+			$categories = $this->getCategoriesByTitleString( $this->title );
 
 			// Get campaigns based on page categories
 			$this->campaigns = $this->getCampaignsByCategories( $categories );
@@ -73,6 +77,8 @@ class DiscoveryAPI extends ApiBase {
 		$queryResult->addValue( null, 'discovery', $result );
 	}
 
+	
+
 	/**
 	 * Get ads recursively according to active campaigns & categories, and push them to $this->ads array
 	 *
@@ -83,7 +89,7 @@ class DiscoveryAPI extends ApiBase {
 		$adCount = count( $this->ads );
 		$totalToFetch = ( $this::MAX_SEE_ALSO_ITEMS - count( $this->seeAlso ) ) + $this::MAX_AD_ITEMS - $adCount;
 
-		$ads = $this->getRandomAdsFromCampaigns( $this->campaigns, $totalToFetch );
+        $ads = $this->getRandomAdsFromCampaigns( $this->campaigns, $totalToFetch );
 
 		if ( $timesRun < 10 && !empty( $ads ) ) {
 			foreach ( $ads as $key => $value ) {
@@ -129,7 +135,7 @@ class DiscoveryAPI extends ApiBase {
 	protected function populateSeeAlso( $timesRun = 0 ) {
 		$seeAlsoCount = count( $this->seeAlso );
 		$totalToFetch = $this::MAX_SEE_ALSO_ITEMS - $seeAlsoCount;
-		$ads = $this->getRelevantArticles( $this->wgTitle->getText() );
+		$ads = $this->seeAlsoTitleKeys;
 		$seeAlsoTitles = $this->getTitlesFromTitleStrings( $ads );
 		$ads = $this->getSeeAlsoItemData( $seeAlsoTitles );
 
@@ -155,7 +161,7 @@ class DiscoveryAPI extends ApiBase {
 	 *
 	 * @param array $campaigns
 	 * @param int $amount
-	 * @return array
+	 * @return array|bool
 	 */
 	protected function getRandomAdsFromCampaigns( array $campaigns, int $amount ) {
 		$ads = $this->getCampaignAds( $campaigns );
@@ -187,7 +193,7 @@ class DiscoveryAPI extends ApiBase {
 	 * getSeeAlsoItemData
 	 *
 	 * @param array $titles
-	 * @return array|Boolean
+	 * @return array|bool
 	 */
 	public function getSeeAlsoItemData( array $titles ) {
 		if ( !$titles || empty( $titles ) ) {
@@ -197,7 +203,7 @@ class DiscoveryAPI extends ApiBase {
 		$seeAlso = [];
 		foreach ( $titles as $key => $value ) {
 			$seeAlso[] = [
-				'content' => $value->mTextform,
+				'content' => $value->getText(),
 				'url' => $value->getFullURL()
 			];
 		}
@@ -209,15 +215,15 @@ class DiscoveryAPI extends ApiBase {
 	 * getCampaignAds
 	 *
 	 * @param array $campaigns
-	 * @return array|Boolean
+	 * @return array|bool
 	 */
-	public function getCampaignAds( array $campaigns ) {
-		if ( !$campaigns || empty( $campaigns ) ) {
+	public function getCampaignAds( array $campaigns = [] ) {
+		if ( empty( $campaigns ) ) {
 			return false;
 		}
-
+		
 		$campaigns = str_replace( '_', ' ', $campaigns );
-
+		
 		$ads = [];
 		foreach ( $campaigns as $campaign ) {
 			$campaign = new AdCampaign( $campaign );
@@ -282,36 +288,27 @@ class DiscoveryAPI extends ApiBase {
 	 * @param String $title
 	 * @return array
 	 */
-	public function getCategoriesByTitleString( String $title ) {
-		$categories = $this->getSemanticData( $title );
+	public function getCategoriesByTitleString( Title $title ) {
+        $categories = $title->getParentCategories();
 
-		if ( empty( $categories ) || $categories[''] === null )  {
-			return [];
-		}
+        $categories = array_keys($categories);
+        $categories = array_map(function ($item) {
+            return substr($item, strpos($item, ':') + 1, strlen($item));
+        }, $categories);
 
-		$categories = $categories[''];
-		unset( $categories[0] );
-		unset( $categories[count( $categories )] );
-		$categories = $this->removeHashes( $categories );
-
-		return $categories;
+        return empty($categories) ? [] : $categories;
 	}
 
 	/**
 	 * Get relevant articles according to current page's ($title) 'read also' list
 	 *
-	 * @param String $title
+	 * @param Title $title
 	 * @param Int $limit
 	 * @return array
 	 */
-	public static function getRelevantArticles( String $title, Int $limit = 2 ) {
-		$semanticData = self::getSemanticData( $title );
-
-		if ( !key_exists( 'ראו גם', $semanticData ) || empty( $semanticData['ראו גם'] ) ) {
-			return [];
-		}
-
-		$results = $semanticData['ראו גם'];
+	public static function getRelevantArticles( Title $title, Int $limit = 2 ) {
+        $results = self::getSemanticData( $title, 'ראו גם' );
+    
 		shuffle( $results );
 
 		$limit = ( count( $results ) < $limit ) ? count( $results ) : $limit;
@@ -326,7 +323,8 @@ class DiscoveryAPI extends ApiBase {
 			$data[] = $results[$limitedKeys];
 		}
 
-		$filteredData = self::removeHashes( $data );
+        $filteredData = self::removeHashes( $data );
+        
 		return $filteredData;
 	}
 
@@ -358,14 +356,15 @@ class DiscoveryAPI extends ApiBase {
 	/**
 	 * getSemanticData
 	 *
-	 * @param String $title
+	 * @param Title $title
 	 * @return array
 	 */
-	public static function getSemanticData( String $title ) {
-		$store = SMW\StoreFactory::getStore()->getSemanticData( \SMW\DIWikiPage::newFromText( $title ) );
+	public static function getSemanticData( Title $title, $property = null ) {
+		$store = SMW\StoreFactory::getStore()->getSemanticData( \SMW\DIWikiPage::newFromText( $title->getText() ) );
 
 		$arrSMWProps = $store->getProperties();
-		$arrValues   = [];
+        $arrValues   = [];
+
 		foreach ( $arrSMWProps as $smwProp ) {
 			$arrSMWPropValues = $store->getPropertyValues( $smwProp );
 			foreach ( $arrSMWPropValues as $smwPropValue ) {
@@ -373,7 +372,7 @@ class DiscoveryAPI extends ApiBase {
 			}
 		}
 
-		return $arrValues;
+        return ( $property !== null ) ? $arrValues[$property] : $arrValues;
 	}
 
 }
