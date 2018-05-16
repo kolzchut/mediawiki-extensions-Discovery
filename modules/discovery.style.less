@@ -1,0 +1,125 @@
+@import 'mediawiki.mixins';
+
+@white: #fff;
+@blue: #355a86;
+@discoveryItemBg: #ebebeb;
+
+.discovery-wrapper {
+    padding-left: 0;
+    padding-right: 0;
+    border-bottom: 5px solid @blue;
+    padding-bottom: 16px;
+    margin-top: 23px;
+    margin-bottom: 43px;
+
+    > h2 {
+        background: @blue;
+        color: @white;
+        padding-top: 0;
+        margin-bottom: 43px;
+        position: relative;
+        padding-left: 72px;a
+
+        span.discovery-title-arrow {
+            .background-image-svg( '../assets/images/arrow.svg', '../assets/images/arrow.png' );
+            width: 58px;
+            height: 58px;
+            display: inline-block;
+            position: absolute;
+            top: -15px;
+            left: 10px;
+            border-radius: 50%;
+            background-color: @blue;
+            padding: 0;
+            background-size: 29px;
+            background-position: center;
+            background-repeat: no-repeat;
+            -webkit-transform: rotate(-100deg);
+                    transform: rotate(-100deg);
+            border: 5px solid @white;
+        }
+    }
+
+    .discovery {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        padding-left: 0;
+        padding-right: 0;
+
+        > div {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            width: 100%;
+            -ms-flex-wrap: wrap;
+                flex-wrap: wrap;
+            -ms-flex-line-pack: center;
+                align-content: center;
+        }
+
+        .discovery-item {
+            position: relative;
+            background: @discoveryItemBg;
+            margin: 0 5px;
+            width: 24.1%;
+            display: inline-block;
+            vertical-align: top;
+            padding: 25px 15px 10px 15px;
+            height: auto;
+
+            &:first-child {
+                margin-left: 0;
+            }
+
+            &:last-child {
+                margin-right: 0;
+            }
+
+            .discovery-link {
+                display: block;
+                text-decoration: none !important;
+
+                .discovery-text {
+                    color: @blue;
+                    font-weight: bold;
+                }
+
+                .discovery-tags {
+                    position: absolute;
+                    top: -18px;
+                    margin-left: -3px;
+
+                    span.discovery-tag {
+                        width: 37px;
+                        height: 35px;
+                        display: inline-block;
+                    }
+
+                    span.discovery-tag-new {
+                        background: transparent url('../assets/images/indicators/new.png') no-repeat scroll center;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@media screen and (max-width: 992px) {
+    .discovery-item {
+        width: 48%;
+        height: auto;
+        margin-left: 0;
+        margin-right: 0;
+        margin: 4px;
+    }
+}
+
+@media screen and (max-width: 640px) {
+    .discovery-item {
+        width: 100%;
+        padding-top: 16px;
+        margin-bottom: 20px;
+    }
+}

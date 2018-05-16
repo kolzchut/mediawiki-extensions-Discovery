@@ -1,9 +1,10 @@
 ( function ( mw, $ ) {
+    console.log('here');
+
 	'use strict';
 
-	var MAX_CHARS = 85;
-
-	var Discovery = {
+	var MAX_CHARS = 85,
+		Discovery = {
 		buildDOM: function( data ) {
 			var finalDOM = $( '<div></div>' );
 
@@ -17,7 +18,7 @@
 			}.bind( this ) );
 
 			$.each( data.ads, function( i, e ) {
-				if ( i == 0 ) {
+				if ( i === 0 ) {
 					finalDOM.prepend( this.buildDiscoveryItem( e ) );
 				} else {
 					finalDOM.append( this.buildDiscoveryItem( e ) );
@@ -27,10 +28,11 @@
 			return finalDOM;
 		},
 		buildDiscoveryItem: function( item ) {
-			var currentItem = $( this.template );
+			var currentItem = $( this.template ), 
+				itemKeys = [];
 
 			if ( item.indicators ) {
-				var itemKeys = Object.keys( item.indicators );
+				itemKeys = Object.keys( item.indicators );
 				$.each( itemKeys, function( i, e ) {
 					if ( item.indicators[ e ] === 1 ) {
 						currentItem.find( '.discovery-tags' ).append( '<span class="discovery-tag discovery-tag-' + e + '"></span>' );
@@ -66,3 +68,4 @@
 	} );
 
 }( mediaWiki, jQuery ) );
+
