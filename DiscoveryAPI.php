@@ -8,6 +8,8 @@ class DiscoveryAPI extends ApiBase {
 
 	protected $ads = [];
 
+	private $allCampaignAds = [];
+
 	protected $seeAlso = [];
 
 	protected $seeAlsoTitleKeys = [];
@@ -59,15 +61,17 @@ class DiscoveryAPI extends ApiBase {
 
 			// Get campaigns based on page categories
 			$this->campaigns = $this->getCampaignsByCategories( $categories );
+
+			$this->allCampaignAds = $this->getCampaignAds( $this->campaigns );
+			shuffle( $this->allCampaignAds );
 		}
 
-		// Populate 'see also' array recursively
-		if ( count( $this->seeAlso ) < $this::MAX_SEE_ALSO_ITEMS ) {
+		// Populate 'see also' array
+		if ( count( $this->seeAlso ) < self::MAX_SEE_ALSO_ITEMS ) {
 			$this->populateSeeAlso();
 		}
 
-		// Populate ads array recursively
-		$this->populateAds();
+		$this->populateAds( $this->allCampaignAds );
 
 		$result = [
 			'seeAlso' => $this->seeAlso,
@@ -78,103 +82,60 @@ class DiscoveryAPI extends ApiBase {
 	}
 
 	/**
-	 * Get ads recursively according to active campaigns & categories, and push them to $this->ads array
+	 * Take given ads, shuffle and push them to $this->ads array
 	 *
-	 * @param mixed $timesRun
-	 * @return Boolean
+	 * @param array $adsArray Array of ads (obviously)
+	 * @return void
 	 */
-	protected function populateAds( $timesRun = 0 ) {
-		$adCount = count( $this->ads );
-		$totalToFetch = ( $this::MAX_SEE_ALSO_ITEMS - count( $this->seeAlso ) ) + $this::MAX_AD_ITEMS - $adCount;
-
-		$ads = $this->getRandomAdsFromCampaigns( $this->campaigns, $totalToFetch );
-
-		if ( $timesRun < 10 && !empty( $ads ) ) {
-			foreach ( $ads as $key => $value ) {
+	protected function populateAds( array $adsArray = [], $secondaryArray ) {
+		if ( !empty( $adsArray ) ) {
+			shuffle( $adsArray );
+			
+			foreach ( $adsArray as $key => $value ) {
 				if (
-					// if current ad url isn't similar to the current page url
-					$value['url'] !== $this->currentUrl
-					// if current ad url doesn't exist in $this->ads
-					&& $this->isUniqueInArray( $this->ads, 'url', $value['url'] )
-					// if current ad url doesn't exist in $this->seeAlso
-					&& $this->isUniqueInArray( $this->seeAlso, 'url', $value['url'] ) ) {
+				// if current ad url isn't similar to the current page url
+				$value['url'] !== $this->currentUrl
+				// if current ad url doesn't exist in $this->ads
+				&& $this->isUniqueInArray( $this->ads, 'url', $value['url'] )
+				// if current ad url doesn't exist in $this->seeAlso
+				&& $this->isUniqueInArray( $this->seeAlso, 'url', $value['url'] )
+				// Make sure only the first <MAX_AD_ITEMS> keys are evaluated (they are random anyway)
+				&& $key < self::MAX_AD_ITEMS ) {
 					$this->ads[] = $value;
-				} else {
-					$this->populateAds( $timesRun + 1 );
 				}
 			}
-		}
 
-		// if $this->ads is filled, return
-		if ( count( $this->ads ) >= $this::MAX_AD_ITEMS ) {
-			return true;
-		}
-
-		// if $this->ads isn't filled, continue populating with ads from 'general' campaign
-		$adCount = count( $this->ads );
-		$totalToFetch = ( $this::MAX_SEE_ALSO_ITEMS - count( $this->seeAlso ) ) + $this::MAX_AD_ITEMS - $adCount;
-		$ads = $this->getRandomAdsFromCampaigns( [ $this->generalCampaign ], $totalToFetch );
-
-		if ( !empty( $ads ) ) {
-			foreach ( $ads as $key => $value ) {
-				if ( $value['url'] !== $this->currentUrl
-					&& $this->isUniqueInArray( $this->ads, 'url', $value['url'] )
-					&& $this->isUniqueInArray( $this->seeAlso, 'url', $value['url'] ) ) {
-					$this->ads[] = $value;
-				} else {
-					$this->populateAds( $timesRun + 1 );
-				}
+			if ( count( $this->ads ) < self::MAX_AD_ITEMS ) {
+				$generalAds = $this->getCampaignAds( [ $this->generalCampaign ] );
+				$this->populateAds( $generalAds );
 			}
 		}
-
-		return !!( count( $this->ads ) >= $this::MAX_AD_ITEMS );
 	}
 
-	protected function populateSeeAlso( $timesRun = 0 ) {
-		$seeAlsoCount = count( $this->seeAlso );
-		$totalToFetch = $this::MAX_SEE_ALSO_ITEMS - $seeAlsoCount;
-		$ads = $this->seeAlsoTitleKeys;
-		$seeAlsoTitles = $this->getTitlesFromTitleStrings( $ads );
-		$ads = $this->getSeeAlsoItemData( $seeAlsoTitles );
+	/**
+	 * Generate 'see also' data, shuffle it and then push to $this->seeAlso array
+	 *
+	 * @return void
+	 */
+	protected function populateSeeAlso() {
+		$itemsData     = $this->seeAlsoTitleKeys;
+		$seeAlsoTitles = $this->getTitlesFromTitleStrings( $itemsData );
+		$itemsData     = $this->getSeeAlsoItemData( $seeAlsoTitles );
 
-		if ( $timesRun < 10 && $ads ) {
+		shuffle( $itemsData );
+
+		if ( !empty( $this->seeAlso ) ) {
 			foreach ( $ads as $key => $value ) {
 				if ( $value['url']
 					&& $value['url'] !== $this->currentUrl
 					&& $this->isUniqueInArray( $this->seeAlso, 'url', $value['url'] )
 					&& $this->isUniqueInArray( $this->ads, 'url', $value['url'] )
+					&& $key < self::MAX_SEE_ALSO_ITEMS
 				) {
 					$this->seeAlso[] = $value;
-				} else {
-					$this->populateSeeAlso( $timesRun + 1 );
 				}
 			}
 		}
-
-		return count( $this->seeAlso ) >= $this::MAX_SEE_ALSO_ITEMS;
-	}
-
-	/**
-	 * getRandomAdsFromCampaigns
-	 *
-	 * @param array $campaigns
-	 * @param int $amount
-	 * @return array|bool
-	 */
-	protected function getRandomAdsFromCampaigns( array $campaigns, int $amount ) {
-		$ads = $this->getCampaignAds( $campaigns );
-
-		if ( empty( $ads ) ) {
-			return false;
-		}
-
-		$result = [];
-		for ( $i = 0; $i < $amount; $i++ ) {
-			$randomIndex = array_rand( $ads, 1 );
-			$result[] = $ads[$randomIndex];
-		}
-
-		return $result;
 	}
 
 	protected function isUniqueInArray( $array, $keyName, $newValue ) {
@@ -213,7 +174,7 @@ class DiscoveryAPI extends ApiBase {
 	 * getCampaignAds
 	 *
 	 * @param array $campaigns
-	 * @return array|bool
+	 * @return array
 	 */
 	public function getCampaignAds( array $campaigns = [] ) {
 		if ( empty( $campaigns ) ) {
@@ -236,7 +197,7 @@ class DiscoveryAPI extends ApiBase {
 			}
 		}
 
-		return empty( $ads ) ? false : $ads;
+		return empty( $ads ) ? [] : $ads;
 	}
 
 	/**
