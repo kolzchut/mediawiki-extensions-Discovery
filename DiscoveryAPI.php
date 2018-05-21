@@ -87,10 +87,10 @@ class DiscoveryAPI extends ApiBase {
 	 * @param array $adsArray Array of ads (obviously)
 	 * @return void
 	 */
-	protected function populateAds( array $adsArray = [], $secondaryArray ) {
+	protected function populateAds( array $adsArray = [], $limit = self::MAX_AD_ITEMS ) {
 		if ( !empty( $adsArray ) ) {
 			shuffle( $adsArray );
-			
+
 			foreach ( $adsArray as $key => $value ) {
 				if (
 				// if current ad url isn't similar to the current page url
@@ -100,14 +100,14 @@ class DiscoveryAPI extends ApiBase {
 				// if current ad url doesn't exist in $this->seeAlso
 				&& $this->isUniqueInArray( $this->seeAlso, 'url', $value['url'] )
 				// Make sure only the first <MAX_AD_ITEMS> keys are evaluated (they are random anyway)
-				&& $key < self::MAX_AD_ITEMS ) {
+				&& $key < $limit ) {
 					$this->ads[] = $value;
 				}
 			}
 
 			if ( count( $this->ads ) < self::MAX_AD_ITEMS ) {
 				$generalAds = $this->getCampaignAds( [ $this->generalCampaign ] );
-				$this->populateAds( $generalAds );
+				$this->populateAds( $generalAds, self::MAX_AD_ITEMS - count( $this->ads ) );
 			}
 		}
 	}
