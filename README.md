@@ -22,4 +22,4 @@ And eventually return the results as a JSON object.
 
 ## How to use
 
-Simply execute a GET request to http://example.com/api.php?action=discovery&title={page_title}&format=json
+Simply execute a GET request to http://example.com/api.php?action=discovery&title=page_title&format=json
