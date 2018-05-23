@@ -2,22 +2,11 @@
 
 class DiscoveryAPI extends ApiBase {
 
-	protected $currentUrl = '';
-
-	protected $campaigns = [];
-
 	protected $ads = [];
-
-	private $allCampaignAds = [];
 
 	protected $seeAlso = [];
 
-	protected $seeAlsoTitleKeys = [];
-
-	/* @var Title */
-	protected $title;
-
-	protected $generalCampaign = '';
+	protected $urls = [];
 
 	const MAX_SEE_ALSO_ITEMS = 2;
 
@@ -38,40 +27,41 @@ class DiscoveryAPI extends ApiBase {
 
 	public function execute() {
 		global $wgPromoterFallbackCampaign;
-		$this->generalCampaign = $wgPromoterFallbackCampaign;
 
-		$queryResult      = $this->getResult();
-		$params           = $this->extractRequestParams();
-		$this->title      = Title::newFromText( $params['title'] );
-		$this->currentUrl = $this->title->getFullURL();
+		$queryResult = $this->getResult();
+		$params      = $this->extractRequestParams();
+		$title       = Title::newFromText( $params['title'] );
 
 		// Get 'see also' item IDs
-		$this->seeAlsoTitleKeys = $this->getRelevantArticles( $this->title, 2 );
-		if ( empty( $this->seeAlsoTitleKeys ) ) {
+		$seeAlsoTitleKeys = $this->getRelevantArticles( $title, self::MAX_SEE_ALSO_ITEMS );
+		if ( empty( $seeAlsoTitleKeys ) ) {
 			$this->seeAlso = [];
 		} else {
 			// Get 'see also' items by given IDs
-			$seeAlsoTitles = $this->getTitlesFromTitleStrings( $this->seeAlsoTitleKeys );
+			$seeAlsoTitles = $this->getTitlesFromTitleStrings( $seeAlsoTitleKeys );
 
 			// Parse 'see also' items to key->value objects
 			$this->seeAlso = $this->getSeeAlsoItemData( $seeAlsoTitles );
-
-			// Get page categories
-			$categories = $this->getCategoriesByTitleString( $this->title );
-
-			// Get campaigns based on page categories
-			$this->campaigns = $this->getCampaignsByCategories( $categories );
-
-			$this->allCampaignAds = $this->getCampaignAds( $this->campaigns );
-			shuffle( $this->allCampaignAds );
 		}
 
-		// Populate 'see also' array
+		// Get page categories
+		$categories = $this->getCategoriesByTitleString( $title );
+
+		// Get campaigns based on page categories
+		$campaigns = $this->getCampaignsByCategories( $categories );
+
+		// Get a fixed number of random ads from current active campaigns
+		$this->ads = $this->getCampaignAds( $campaigns, $this->urls, self::MAX_AD_ITEMS );
+
+		// if $this->ads isn't full, fill it with ads from the General campaign
+		if ( count( $this->ads ) < self::MAX_AD_ITEMS ) {
+			$this->fillMissingAds( $this->ads, $wgPromoterFallbackCampaign, self::MAX_AD_ITEMS );
+		}
+
+		// if $this->seeAlso isn't full, fill it with ads from the General campaign
 		if ( count( $this->seeAlso ) < self::MAX_SEE_ALSO_ITEMS ) {
-			$this->populateSeeAlso();
+			$this->fillMissingAds( $this->seeAlso, $wgPromoterFallbackCampaign, self::MAX_SEE_ALSO_ITEMS );
 		}
-
-		$this->populateAds( $this->allCampaignAds );
 
 		$result = [
 			'seeAlso' => $this->seeAlso,
@@ -82,70 +72,19 @@ class DiscoveryAPI extends ApiBase {
 	}
 
 	/**
-	 * Take given ads, shuffle and push them to $this->ads array
+	 * Fill an array of ads to match its max value
 	 *
-	 * @param array $adsArray Array of ads (obviously)
+	 * @param array &$adsArray The array to add ads to
+	 * @param string $fallbackCampaign The name of the campaign to fetch ads from
+	 * @param int $limit Ad limit
 	 * @return void
 	 */
-	protected function populateAds( array $adsArray = [], $limit = self::MAX_AD_ITEMS ) {
-		if ( !empty( $adsArray ) ) {
-			shuffle( $adsArray );
+	private function fillMissingAds( &$adsArray, $fallbackCampaign, $limit ) {
+		$generalCampaign = $this->getCampaignAds(
+			[ $fallbackCampaign ], $this->urls, $limit - count( $adsArray )
+		);
 
-			foreach ( $adsArray as $key => $value ) {
-				if (
-				// if current ad url isn't similar to the current page url
-				$value['url'] !== $this->currentUrl
-				// if current ad url doesn't exist in $this->ads
-				&& $this->isUniqueInArray( $this->ads, 'url', $value['url'] )
-				// if current ad url doesn't exist in $this->seeAlso
-				&& $this->isUniqueInArray( $this->seeAlso, 'url', $value['url'] )
-				// Make sure only the first <MAX_AD_ITEMS> keys are evaluated (they are random anyway)
-				&& $key < $limit ) {
-					$this->ads[] = $value;
-				}
-			}
-
-			if ( count( $this->ads ) < self::MAX_AD_ITEMS ) {
-				$generalAds = $this->getCampaignAds( [ $this->generalCampaign ] );
-				$this->populateAds( $generalAds, self::MAX_AD_ITEMS - count( $this->ads ) );
-			}
-		}
-	}
-
-	/**
-	 * Generate 'see also' data, shuffle it and then push to $this->seeAlso array
-	 *
-	 * @return void
-	 */
-	protected function populateSeeAlso() {
-		$itemsData     = $this->seeAlsoTitleKeys;
-		$seeAlsoTitles = $this->getTitlesFromTitleStrings( $itemsData );
-		$itemsData     = $this->getSeeAlsoItemData( $seeAlsoTitles );
-
-		shuffle( $itemsData );
-
-		if ( !empty( $this->seeAlso ) ) {
-			foreach ( $ads as $key => $value ) {
-				if ( $value['url']
-					&& $value['url'] !== $this->currentUrl
-					&& $this->isUniqueInArray( $this->seeAlso, 'url', $value['url'] )
-					&& $this->isUniqueInArray( $this->ads, 'url', $value['url'] )
-					&& $key < self::MAX_SEE_ALSO_ITEMS
-				) {
-					$this->seeAlso[] = $value;
-				}
-			}
-		}
-	}
-
-	protected function isUniqueInArray( $array, $keyName, $newValue ) {
-		foreach ( $array as $key => $value ) {
-			if ( $value[$keyName] === $newValue ) {
-				return false;
-			}
-		}
-
-		return true;
+		$adsArray = array_merge( $adsArray, $generalCampaign );
 	}
 
 	/**
@@ -161,9 +100,11 @@ class DiscoveryAPI extends ApiBase {
 
 		$seeAlso = [];
 		foreach ( $titles as $key => $value ) {
+			$this->urls[] = $value->getFullURL();
+
 			$seeAlso[] = [
 				'content' => $value->getText(),
-				'url' => $value->getFullURL()
+				'url'     => $value->getFullURL()
 			];
 		}
 
@@ -171,33 +112,36 @@ class DiscoveryAPI extends ApiBase {
 	}
 
 	/**
-	 * getCampaignAds
+	 * Get active ads from active campaigns, initialize them and return a normalized structure
 	 *
-	 * @param array $campaigns
+	 * @param array $campaigns array of campaign names to include
+	 * @param array $ignoredUrls array of URLs to ignore (normally $this->urls)
+	 * @param int $limit max number of ads to fetch
 	 * @return array
 	 */
-	public function getCampaignAds( array $campaigns = [] ) {
-		if ( empty( $campaigns ) ) {
-			return false;
-		}
+	public function getCampaignAds( array $campaigns = [], array $ignoredUrls = [], $limit ) {
+		$adsToMap = AdCampaign::getCampaignAds( $campaigns, $ignoredUrls, $limit );
 
-		$campaigns = str_replace( '_', ' ', $campaigns );
+		$ads = array_map( function ( $adItem ) {
+			global $wgServer;
 
-		$ads = [];
-		foreach ( $campaigns as $campaign ) {
-			$campaign = new AdCampaign( $campaign );
+			$ad = Ad::fromId( $adItem->ad_id );
 
-			if ( $campaign->isEnabled() ) {
-				$campaign_ads = $campaign->getAds();
+			$url = $ad->getMainLink();
+			$url = empty( $url ) ? null : Skin::makeInternalOrExternalUrl( $ad->getMainLink() );
+			$url = strpos( $url, '/' ) === 0 ? $wgServer . $url : $url;
+			$this->urls[] = $url;
 
-				foreach ( $campaign_ads as $ad ) {
-					$ad = Ad::fromName( $ad['name'] );
-					$ads[] = $this->getAdData( $ad );
-				}
-			}
-		}
+			return [
+				'content'    => $ad->getBodyContent(),
+				'url'        => $url,
+				'indicators' => [
+					'new' => (int)$ad->isNew()
+				]
+			];
+		}, $adsToMap );
 
-		return empty( $ads ) ? [] : $ads;
+		return $ads;
 	}
 
 	/**
@@ -210,35 +154,9 @@ class DiscoveryAPI extends ApiBase {
 		$campaigns = AdCampaign::getAllCampaignNames();
 		$campaigns = str_replace( ' ', '_', $campaigns );
 		$campaigns = array_intersect( $categories, $campaigns );
-		$result = array_values( $campaigns );
+		$result    = array_values( $campaigns );
 
 		return !empty( $result ) ? $result : [];
-	}
-
-	/**
-	 * getAdData
-	 *
-	 * @param Ad $ad
-	 * @return array|Boolean
-	 */
-	public function getAdData( Ad $ad ) {
-		global $wgServer;
-
-		if ( !$ad || !$ad->isNotExpired() ) {
-			return false;
-		}
-
-		$url = $ad->getMainLink();
-		$url = empty( $url ) ? null : Skin::makeInternalOrExternalUrl( $ad->getMainLink() );
-		$url = strpos( $url, '/' ) === 0 ? $wgServer . $url : $url;
-
-		return [
-			'content'    => $ad->getBodyContent(),
-			'url'        => $url,
-			'indicators' => [
-				'new' => (int)$ad->isNew()
-			]
-		];
 	}
 
 	/**
