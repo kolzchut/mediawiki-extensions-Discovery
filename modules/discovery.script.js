@@ -1,6 +1,4 @@
 ( function ( mw, $ ) {
-    console.log('here');
-
 	'use strict';
 
 	var MAX_CHARS = 85,
