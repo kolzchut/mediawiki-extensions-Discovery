@@ -147,7 +147,7 @@ class DiscoveryAPI extends ApiBase {
 	/**
 	 * getCampaignsByCategories
 	 *
-	 * @param mixed $categories
+	 * @param array $categories
 	 * @return array
 	 */
 	public function getCampaignsByCategories( $categories ) {
@@ -162,7 +162,7 @@ class DiscoveryAPI extends ApiBase {
 	/**
 	 * getCategoriesByTitleString
 	 *
-	 * @param String $title
+	 * @param Title $title
 	 * @return array
 	 */
 	public function getCategoriesByTitleString( Title $title ) {
@@ -234,6 +234,7 @@ class DiscoveryAPI extends ApiBase {
 	 * getSemanticData
 	 *
 	 * @param Title $title
+	 * @param String $property
 	 * @return array
 	 */
 	public static function getSemanticData( Title $title, $property = null ) {
