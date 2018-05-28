@@ -5,6 +5,7 @@
         "Tal Koren (Interjet, Kol Zchut)"
     ],
     "descriptionmsg": "Discovery-desc",
+    "url": "https://github.com/kolzchut/mediawiki-extensions-Discovery",
     "license-name": "MIT",
     "type": "other",
     "AutoloadClasses": {
@@ -15,9 +16,9 @@
         "discovery": "DiscoveryAPI"
     },
     "ResourceModules": {
-        "ext.discovery.scripts": {
-            "scripts": "extensions/WikiRights/Discovery/modules/scripts/discovery.script.js",
-            "styles": "extensions/WikiRights/Discovery/modules/styles/discovery.style.css"
+        "ext.discovery": {
+            "scripts": "extensions/WikiRights/Discovery/modules/discovery.script.js",
+            "styles": "extensions/WikiRights/Discovery/modules/discovery.style.less"
         }
     },
     "Hooks": {
