@@ -45,7 +45,7 @@ class DiscoveryAPI extends ApiBase {
 		}
 
 		// Get page categories
-		$categories = $this->getCategoriesByTitleString( $title );
+		$categories = $this->getCategoriesByTitle( $title );
 
 		// Get campaigns based on page categories
 		$campaigns = $this->getCampaignsByCategories( $categories );
@@ -160,12 +160,12 @@ class DiscoveryAPI extends ApiBase {
 	}
 
 	/**
-	 * getCategoriesByTitleString
+	 * getCategoriesByTitle
 	 *
 	 * @param Title $title
 	 * @return array
 	 */
-	public function getCategoriesByTitleString( Title $title ) {
+	public function getCategoriesByTitle( Title $title ) {
 		$categories = $title->getParentCategories();
 
 		$categories = array_keys( $categories );
