@@ -1,5 +1,7 @@
 <?php
 
+use MediaWiki\MediaWikiServices;
+
 class DiscoveryAPI extends ApiBase {
 
 	protected $ads = [];
@@ -167,10 +169,11 @@ class DiscoveryAPI extends ApiBase {
 	 */
 	public function getCategoriesByTitle( Title $title ) {
 		$categories = $title->getParentCategories();
+		$titleParser = MediaWikiServices::getInstance()->getTitleParser();
 
 		$categories = array_keys( $categories );
-		$categories = array_map( function ( $item ) {
-			return substr( $item, strpos( $item, ':' ) + 1, strlen( $item ) );
+		$categories = array_map( function ( $item ) use ( $titleParser ) {
+			return $titleParser->parseTitle( $item, NS_MAIN )->getDBkey();
 		}, $categories );
 
 		return empty( $categories ) ? [] : $categories;
