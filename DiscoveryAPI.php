@@ -129,7 +129,7 @@ class DiscoveryAPI extends ApiBase {
 
 			$url = $ad->getMainLink();
 			$url = empty( $url ) ? null : Skin::makeInternalOrExternalUrl( $ad->getMainLink() );
-			$url = strpos( $url, '/' ) === 0 ? $wgServer . $url : $url;
+			$url = wfExpandUrl( $url );
 			$this->urls[] = $url;
 
 			return [
