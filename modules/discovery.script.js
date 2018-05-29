@@ -1,8 +1,8 @@
 ( function ( mw, $ ) {
 	'use strict';
 
-	var MAX_CHARS = 85,
-		Discovery = {
+	mw.discovery = {
+		MAX_CHARS: 85,
 		buildDOM: function( data ) {
 			var finalDOM = $( '<div></div>' );
 
@@ -26,7 +26,7 @@
 			return finalDOM;
 		},
 		buildDiscoveryItem: function( item ) {
-			var currentItem = $( this.template ), 
+			var currentItem = $( this.template ),
 				itemKeys = [];
 
 			if ( item.indicators ) {
@@ -39,7 +39,7 @@
 			}
 
 			currentItem.find( '.discovery-link' ).attr( 'href', item.url );
-			currentItem.find( '.discovery-text' ).text( item.content.length > MAX_CHARS ? item.content.substring( 0, MAX_CHARS ) + '...' : item.content );
+			currentItem.find( '.discovery-text' ).text( item.content.length > this.MAX_CHARS ? item.content.substring( 0, this.MAX_CHARS ) + '...' : item.content );
 
 			return currentItem;
 		},
@@ -58,7 +58,7 @@
 			url: mw.config.get( 'wgServer' ) + mw.config.get( 'wgScriptPath' ) + '/api.php'
 		} )
 		.then( function ( response ) {
-			var discoveryDOM = Discovery.buildDOM( response.discovery );
+			var discoveryDOM = mw.discovery.buildDOM( response.discovery );
 
 			$( '.discovery' ).append( discoveryDOM );
 		} );
