@@ -3,19 +3,19 @@
 
 	mw.discovery = {
 		MAX_CHARS: 85,
-		buildDOM: function( data ) {
+		buildDOM: function ( data ) {
 			var finalDOM = $( '<div></div>' );
 
 			if ( !data ) {
 				return;
 			}
 
-			$.each( data.seeAlso, function( i, e ) {
+			$.each( data.seeAlso, function ( i, e ) {
 				var item = this.buildDiscoveryItem( e );
 				finalDOM.append( item );
 			}.bind( this ) );
 
-			$.each( data.ads, function( i, e ) {
+			$.each( data.ads, function ( i, e ) {
 				if ( i === 0 ) {
 					finalDOM.prepend( this.buildDiscoveryItem( e ) );
 				} else {
@@ -25,13 +25,13 @@
 
 			return finalDOM;
 		},
-		buildDiscoveryItem: function( item ) {
+		buildDiscoveryItem: function ( item ) {
 			var currentItem = $( this.template ),
 				itemKeys = [];
 
 			if ( item.indicators ) {
 				itemKeys = Object.keys( item.indicators );
-				$.each( itemKeys, function( i, e ) {
+				$.each( itemKeys, function ( i, e ) {
 					if ( item.indicators[ e ] === 1 ) {
 						currentItem.find( '.discovery-tags' ).append( '<span class="discovery-tag discovery-tag-' + e + '"></span>' );
 					}
