@@ -34,6 +34,10 @@ class DiscoveryAPI extends ApiBase {
 		$params      = $this->extractRequestParams();
 		$title       = Title::newFromText( $params['title'] );
 
+		if ( !$title->exists() ) {
+			throw new InvalidArgumentException( "$title does not exist" );
+		}
+
 		// Get 'see also' item IDs
 		$seeAlsoTitleKeys = $this->getRelevantArticles( $title, self::MAX_SEE_ALSO_ITEMS );
 		if ( empty( $seeAlsoTitleKeys ) ) {
@@ -125,8 +129,6 @@ class DiscoveryAPI extends ApiBase {
 		$adsToMap = AdCampaign::getCampaignAds( $campaigns, $ignoredUrls, $limit );
 
 		$ads = array_map( function ( $adItem ) {
-			global $wgServer;
-
 			$ad = Ad::fromId( $adItem->ad_id );
 
 			$url = $ad->getMainLink();
@@ -188,7 +190,9 @@ class DiscoveryAPI extends ApiBase {
 	 */
 	public static function getRelevantArticles( Title $title, Int $limit = 2 ) {
 		$results = self::getSemanticData( $title, 'ראו גם' );
-
+		if ( !$results ) {
+			return null;
+		}
 		shuffle( $results );
 
 		$limit = ( count( $results ) < $limit ) ? count( $results ) : $limit;
