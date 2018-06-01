@@ -89,6 +89,10 @@ class DiscoveryAPI extends ApiBase {
 		$generalCampaign = $this->getCampaignAds(
 			[ $fallbackCampaign ], $this->urls, $limit - count( $adsArray )
 		);
+		// For potential future analytics
+		foreach ( $generalCampaign as &$ad ) {
+			$ad['type'] = 'fallback';
+		}
 
 		$adsArray = array_merge( $adsArray, $generalCampaign );
 	}
@@ -137,6 +141,7 @@ class DiscoveryAPI extends ApiBase {
 			$this->urls[] = $url;
 
 			return [
+				'name'      => $ad->getName(),
 				'content'    => $ad->getBodyContent(),
 				'url'        => $url,
 				'indicators' => [

@@ -3,6 +3,7 @@
 
 	mw.discovery = {
 		MAX_CHARS: 85,
+		config: mw.config.get( 'wgDiscoveryConfig' ),
 		buildDOM: function ( data ) {
 			var finalDOM = $( '<div></div>' );
 
@@ -40,10 +41,49 @@
 
 			currentItem.find( '.discovery-link' ).attr( 'href', item.url );
 			currentItem.find( '.discovery-text' ).text( item.content.length > this.MAX_CHARS ? item.content.substring( 0, this.MAX_CHARS ) + '...' : item.content );
-
+			currentItem.data( {
+				type: item.type || ( item.name ? 'ad' : 'see-also' ),
+				name: item.name || item.content
+			} );
 			return currentItem;
 		},
-		template: '<div class="discovery-item"><a class="discovery-link"><div class="discovery-tags"></div><div class="discovery-text"></div></a></div>'
+		template: '<div class="discovery-item"><a class="discovery-link"><div class="discovery-tags"></div><div class="discovery-text"></div></a></div>',
+		trackDiscoveryEvents: function() {
+			if ( mw.loader.getState( 'ext.googleUniversalAnalytics.utils' ) === null ) {
+				return;
+			}
+			mw.loader.using( 'ext.googleUniversalAnalytics.utils' ).then( function () {
+				if ( mw.discovery.config.trackImpressions === true ) {
+					$( '.discovery-item' ).each( function( i, e ) {
+						$( this ).data( 'position', i + 1 );
+						// Send view hit
+						mw.googleAnalytics.utils.recordEvent( {
+							eventCategory: 'discovery',
+							eventAction: 'impression',
+							eventLabel: $( this ).data( 'name' ),
+							eventValue: i + 1,
+							nonInteraction: true
+						} );
+					} );
+
+				}
+
+				if ( mw.discovery.config.trackClicks === true ) {
+					// And bind another event to a possible click...
+					$( '.discovery' ).on( 'click', '.discovery-link', function ( e ) {
+						var $item = $( this ).parent();
+
+						mw.googleAnalytics.utils.recordClickEvent( e, {
+							eventCategory: 'discovery',
+							eventAction: 'click',
+							eventLabel: $item.data( 'name' ),
+							eventValue: parseInt( $item.data( 'position' ) ),
+							nonInteraction: false
+						} );
+					} );
+				}
+			} );
+		}
 	};
 
 	$( document ).ready( function () {
@@ -59,11 +99,10 @@
 		} )
 		.then( function ( response ) {
 			var discoveryDOM = mw.discovery.buildDOM( response.discovery );
-
 			$( '.discovery' ).append( discoveryDOM );
+			mw.discovery.trackDiscoveryEvents();
 		} );
 
 	} );
 
 }( mediaWiki, jQuery ) );
-

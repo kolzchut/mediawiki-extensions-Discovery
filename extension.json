@@ -22,7 +22,14 @@
         }
     },
     "Hooks": {
-        "BeforePageDisplay": "DiscoveryHooks::onBeforePageDisplay"
+        "BeforePageDisplay": "DiscoveryHooks::onBeforePageDisplay",
+        "ResourceLoaderGetConfigVars": "DiscoveryHooks::onResourceLoaderGetConfigVars"
+    },
+    "config": {
+        "DiscoveryConfig": {
+            "trackImpressions": true,
+            "trackClicks": true
+        }
     },
     "manifest_version": 1
 }
