@@ -92,7 +92,7 @@
 			method: 'GET',
 			data: {
 				action: 'discovery',
-				title: mw.config.get( 'wgTitle' ),
+				title: mw.config.get( 'wgPageName' ),
 				format: 'json'
 			},
 			url: mw.config.get( 'wgServer' ) + mw.config.get( 'wgScriptPath' ) + '/api.php'
