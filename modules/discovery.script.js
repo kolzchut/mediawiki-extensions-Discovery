@@ -40,7 +40,7 @@
 			}
 
 			currentItem.find( '.discovery-link' ).attr( 'href', item.url );
-			currentItem.find( '.discovery-text' ).text( item.content.length > this.MAX_CHARS ? item.content.substring( 0, this.MAX_CHARS ) + '...' : item.content );
+			currentItem.find( '.discovery-text' ).text( item.content.length > this.MAX_CHARS ? item.content.substring( 0, this.MAX_CHARS ) + '…' : item.content );
 			currentItem.data( {
 				type: item.type || ( item.name ? 'ad' : 'see-also' ),
 				name: item.name || item.content
