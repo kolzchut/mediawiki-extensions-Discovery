@@ -1,12 +1,31 @@
-<?php 
+<?php
 
-class DiscoveryHooks
-{
+class DiscoveryHooks {
 
-	public static function onBeforePageDisplay( OutputPage &$out, Skin &$skin ) {
-		$out->addModules( 'ext.discovery' );
+	public static function onParserFirstCallInit( Parser $parser ) {
+		$parser->setHook( 'discovery', 'DiscoveryHooks::renderTagDiscovery' );
+	}
 
-		return true;
+	/**
+	 * @param $input
+	 * @param array $args
+	 * @param Parser $parser
+	 * @param PPFrame $frame
+	 *
+	 * @return string
+	 */
+	public static function renderTagDiscovery( $input, array $args, Parser $parser ) {
+		$parser->getOutput()->addModules( 'ext.discovery' );
+		return self::getDiscoveryHTML();
+	}
+
+
+	static function getDiscoveryHTML() {
+		$data['title'] = wfMessage( 'discovery-component-title' )->text();
+		$templateParser = new \TemplateParser( __DIR__ . '/templates' );
+		$html = $templateParser->processTemplate( 'discoveryComponent', $data );
+
+		return $html;
 	}
 
 	/**

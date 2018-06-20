@@ -1,6 +1,6 @@
 {
     "name": "Discovery",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "author": [
         "Tal Koren (Interjet, Kol Zchut)"
     ],
@@ -22,8 +22,8 @@
         }
     },
     "Hooks": {
-        "BeforePageDisplay": "DiscoveryHooks::onBeforePageDisplay",
-        "ResourceLoaderGetConfigVars": "DiscoveryHooks::onResourceLoaderGetConfigVars"
+        "ResourceLoaderGetConfigVars": "DiscoveryHooks::onResourceLoaderGetConfigVars",
+        "ParserFirstCallInit": "DiscoveryHooks::onParserFirstCallInit"
     },
     "config": {
         "DiscoveryConfig": {
@@ -31,5 +31,10 @@
             "trackClicks": true
         }
     },
+	"MessagesDirs": {
+		"Discovery": [
+			"i18n"
+		]
+	},
     "manifest_version": 1
 }
