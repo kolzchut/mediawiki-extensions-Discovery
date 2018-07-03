@@ -28,7 +28,8 @@
     "config": {
         "DiscoveryConfig": {
             "trackImpressions": true,
-            "trackClicks": true
+			"trackClicks": true,
+			"blogUrl": "blog.kolzchut.org.il"
         }
     },
 	"MessagesDirs": {

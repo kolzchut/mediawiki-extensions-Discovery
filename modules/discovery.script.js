@@ -41,6 +41,11 @@
 
 			currentItem.find( '.discovery-link' ).attr( 'href', item.url );
 			currentItem.find( '.discovery-text' ).text( item.content.length > this.MAX_CHARS ? item.content.substring( 0, this.MAX_CHARS ) + '…' : item.content );
+
+			if ( item.type !== null ) {
+				currentItem.find( '.discovery-text' ).append( '<span class="discovery-urltype discovery-urltype-' + item.type + '"></span>' );
+			}
+
 			currentItem.data( {
 				type: item.type || ( item.name ? 'ad' : 'see-also' ),
 				name: item.name || item.content
