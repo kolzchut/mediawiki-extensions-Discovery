@@ -82,7 +82,23 @@
     .discovery-text {
 	    color: @blue;
 	    font-weight: bold;
-	    word-wrap: break-word;
+		word-wrap: break-word;
+
+		.discovery-urltype {
+			display: inline-block;
+			width: 14px;
+			height: 14px;
+			background-repeat: no-repeat;
+			margin: 0 0 0 4px;
+
+			&-blog {
+				.background-image-svg('../assets/images/blog_icon.svg', '../assets/images/blog_icon.png');
+			}
+
+			&-external {
+				.background-image-svg('../assets/images/link_icon.svg', '../assets/images/link_icon.png');
+			}
+		}
     }
 
     .discovery-tags {

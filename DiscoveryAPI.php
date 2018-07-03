@@ -10,6 +10,8 @@ class DiscoveryAPI extends ApiBase {
 
 	protected $urls = [];
 
+	protected $config = [];
+
 	const MAX_SEE_ALSO_ITEMS = 2;
 
 	const MAX_AD_ITEMS = 2;
@@ -29,10 +31,12 @@ class DiscoveryAPI extends ApiBase {
 
 	public function execute() {
 		global $wgPromoterFallbackCampaign;
+		global $wgDiscoveryConfig;
 
-		$queryResult = $this->getResult();
-		$params      = $this->extractRequestParams();
-		$title       = Title::newFromText( $params['title'] );
+		$this->config = $wgDiscoveryConfig;
+		$queryResult  = $this->getResult();
+		$params       = $this->extractRequestParams();
+		$title        = Title::newFromText( $params['title'] );
 
 		if ( !$title->exists() ) {
 			throw new InvalidArgumentException( "$title does not exist" );
@@ -131,8 +135,9 @@ class DiscoveryAPI extends ApiBase {
 	 */
 	public function getCampaignAds( array $campaigns = [], array $ignoredUrls = [], $limit ) {
 		$adsToMap = AdCampaign::getCampaignAds( $campaigns, $ignoredUrls, $limit );
-
-		$ads = array_map( function ( $adItem ) {
+		global $wgServer;
+		
+		$ads = array_map( function ( $adItem ) use ( $wgServer ) {
 			$ad = Ad::fromId( $adItem->ad_id );
 
 			$url = $ad->getMainLink();
@@ -140,10 +145,15 @@ class DiscoveryAPI extends ApiBase {
 			$url = wfExpandUrl( $url );
 			$this->urls[] = $url;
 
+			$blogUrl = $this->config['blogUrl'];
+			if ( strpos( $url, $blogUrl ) !== false ) $urlType = 'blog';
+			elseif ( strpos( $url, $wgServer ) === false ) $urlType = 'external';
+
 			return [
-				'name'      => $ad->getName(),
+				'name'       => $ad->getName(),
 				'content'    => $ad->getBodyContent(),
 				'url'        => $url,
+				'type'       => $urlType,
 				'indicators' => [
 					'new' => (int)$ad->isNew()
 				]
