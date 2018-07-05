@@ -136,7 +136,7 @@ class DiscoveryAPI extends ApiBase {
 	public function getCampaignAds( array $campaigns = [], array $ignoredUrls = [], $limit ) {
 		$adsToMap = AdCampaign::getCampaignAds( $campaigns, $ignoredUrls, $limit );
 		global $wgServer;
-		
+
 		$ads = array_map( function ( $adItem ) use ( $wgServer ) {
 			$ad = Ad::fromId( $adItem->ad_id );
 
@@ -146,8 +146,11 @@ class DiscoveryAPI extends ApiBase {
 			$this->urls[] = $url;
 
 			$blogUrl = $this->config['blogUrl'];
-			if ( strpos( $url, $blogUrl ) !== false ) $urlType = 'blog';
-			elseif ( strpos( $url, $wgServer ) === false ) $urlType = 'external';
+			if ( strpos( $url, $blogUrl ) !== false ) {
+				$urlType = 'blog';
+			} elseif ( strpos( $url, $wgServer ) === false ) {
+				$urlType = 'external';
+			}
 
 			return [
 				'name'       => $ad->getName(),
@@ -260,7 +263,9 @@ class DiscoveryAPI extends ApiBase {
 	 * @return array
 	 */
 	public static function getSemanticData( Title $title, $property = null ) {
-		$store = SMW\StoreFactory::getStore()->getSemanticData( \SMW\DIWikiPage::newFromText( $title->getText() ) );
+		$store = SMW\StoreFactory::getStore()->getSemanticData(
+			\SMW\DIWikiPage::newFromText( $title->getText() )
+		);
 
 		$arrSMWProps = $store->getProperties();
 		$arrValues   = [];
