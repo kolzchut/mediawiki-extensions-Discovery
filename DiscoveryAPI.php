@@ -277,8 +277,16 @@ class DiscoveryAPI extends ApiBase {
 				$arrValues[$smwProp->getLabel()][] = $smwPropValue->getSerialization();
 			}
 		}
-
-		return ( $property !== null ) ? $arrValues[$property] : $arrValues;
+		// No property requested? return all semantic data
+		if ( $property === null ) {
+			return $arrValues;
+		}
+		// Property requested and data exists for it
+		if ( isset( $arrValues[$property] ) ) {
+			return $arrValues[$property];
+		}
+		// Property requested, no data exists for it
+		return null;
 	}
 
 }
