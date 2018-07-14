@@ -42,8 +42,8 @@
 			currentItem.find( '.discovery-link' ).attr( 'href', item.url );
 			currentItem.find( '.discovery-text' ).text( item.content.length > this.MAX_CHARS ? item.content.substring( 0, this.MAX_CHARS ) + '…' : item.content );
 
-			if ( item.type !== null ) {
-				currentItem.find( '.discovery-text' ).append( '<span class="discovery-urltype discovery-urltype-' + item.type + '"></span>' );
+			if ( item.urlType !== null && item.urlType !== 'internal' ) {
+				currentItem.find( '.discovery-text' ).append( '<span class="discovery-urltype discovery-urltype-' + item.urlType + '"></span>' );
 			}
 
 			currentItem.data( {
@@ -91,23 +91,25 @@
 		}
 	};
 
-	$( document ).ready( function () {
+	if ( mw.config.get( 'wgCanonicalNamespace' ) !== 'Special' ) {
+		$( document ).ready( function () {
 
-		$.ajax( {
-			method: 'GET',
-			data: {
-				action: 'discovery',
-				title: mw.config.get( 'wgPageName' ),
-				format: 'json'
-			},
-			url: mw.config.get( 'wgServer' ) + mw.config.get( 'wgScriptPath' ) + '/api.php'
-		} )
-		.then( function ( response ) {
-			var discoveryDOM = mw.discovery.buildDOM( response.discovery );
-			$( '.discovery' ).append( discoveryDOM );
-			mw.discovery.trackDiscoveryEvents();
+			$.ajax( {
+				method: 'GET',
+				data: {
+					action: 'discovery',
+					title: mw.config.get( 'wgPageName' ),
+					format: 'json'
+				},
+				url: mw.config.get( 'wgServer' ) + mw.config.get( 'wgScriptPath' ) + '/api.php'
+			} )
+				.then( function ( response ) {
+					var discoveryDOM = mw.discovery.buildDOM( response.discovery );
+					$( '.discovery' ).append( discoveryDOM );
+					mw.discovery.trackDiscoveryEvents();
+				} );
+
 		} );
-
-	} );
+	}
 
 }( mediaWiki, jQuery ) );

@@ -145,6 +145,7 @@ class DiscoveryAPI extends ApiBase {
 			$url = wfExpandUrl( $url );
 			$this->urls[] = $url;
 
+			$urlType = 'internal';
 			$blogUrl = $this->config['blogUrl'];
 			if ( strpos( $url, $blogUrl ) !== false ) {
 				$urlType = 'blog';
@@ -156,7 +157,7 @@ class DiscoveryAPI extends ApiBase {
 				'name'       => $ad->getName(),
 				'content'    => $ad->getBodyContent(),
 				'url'        => $url,
-				'type'       => $urlType,
+				'urlType'    => $urlType,
 				'indicators' => [
 					'new' => (int)$ad->isNew()
 				]
