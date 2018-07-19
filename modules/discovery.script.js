@@ -58,9 +58,10 @@
 				return;
 			}
 			mw.loader.using( 'ext.googleUniversalAnalytics.utils' ).then( function () {
-				if ( mw.discovery.config.trackImpressions === true ) {
-					$( '.discovery-item' ).each( function( i, e ) {
-						$( this ).data( 'position', i + 1 );
+				$( '.discovery-item' ).each( function( i, e ) {
+					$( this ).data( 'position', i + 1 );
+
+					if ( mw.discovery.config.trackImpressions === true ) {
 						// Send view hit
 						mw.googleAnalytics.utils.recordEvent( {
 							eventCategory: 'discovery',
@@ -69,9 +70,8 @@
 							eventValue: i + 1,
 							nonInteraction: true
 						} );
-					} );
-
-				}
+					}
+				} );
 
 				if ( mw.discovery.config.trackClicks === true ) {
 					// And bind another event to a possible click...
