@@ -1,6 +1,8 @@
 ( function ( mw, $ ) {
 	'use strict';
 
+	var api = new mw.Api();
+
 	mw.discovery = {
 		MAX_CHARS: 85,
 		config: mw.config.get( 'wgDiscoveryConfig' ),
@@ -11,16 +13,12 @@
 				return;
 			}
 
-			$.each( data.seeAlso, function ( i, e ) {
-				var item = this.buildDiscoveryItem( e );
-				finalDOM.append( item );
-			}.bind( this ) );
-
 			$.each( data.ads, function ( i, e ) {
+				var item = this.buildDiscoveryItem( e );
 				if ( i === 0 ) {
-					finalDOM.prepend( this.buildDiscoveryItem( e ) );
+					finalDOM.prepend( item );
 				} else {
-					finalDOM.append( this.buildDiscoveryItem( e ) );
+					finalDOM.append( item );
 				}
 			}.bind( this ) );
 
@@ -28,7 +26,8 @@
 		},
 		buildDiscoveryItem: function ( item ) {
 			var currentItem = $( this.template ),
-				itemKeys = [];
+				itemKeys = [],
+				itemText = item.content.length > this.MAX_CHARS ? item.content.substring( 0, this.MAX_CHARS ) + '…' : item.content;
 
 			if ( item.indicators ) {
 				itemKeys = Object.keys( item.indicators );
@@ -40,19 +39,20 @@
 			}
 
 			currentItem.find( '.discovery-link' ).attr( 'href', item.url );
-			currentItem.find( '.discovery-text' ).text( item.content.length > this.MAX_CHARS ? item.content.substring( 0, this.MAX_CHARS ) + '…' : item.content );
+			currentItem.find( '.discovery-text' ).text( itemText );
 
 			if ( item.urlType !== null && item.urlType !== 'internal' ) {
 				currentItem.find( '.discovery-text' ).append( '<span class="discovery-urltype discovery-urltype-' + item.urlType + '"></span>' );
 			}
 
 			currentItem.data( {
-				type: item.type || ( item.name ? 'ad' : 'see-also' ),
-				name: item.name || item.content
+				name: item.name
 			} );
 			return currentItem;
 		},
+
 		template: '<div class="discovery-item"><a class="discovery-link"><div class="discovery-tags"></div><div class="discovery-text"></div></a></div>',
+
 		trackDiscoveryEvents: function() {
 			if ( mw.loader.getState( 'ext.googleUniversalAnalytics.utils' ) === null ) {
 				return;
@@ -93,23 +93,15 @@
 
 	if ( mw.config.get( 'wgCanonicalNamespace' ) !== 'Special' ) {
 		$( document ).ready( function () {
-
-			$.ajax( {
-				method: 'GET',
-				data: {
-					action: 'discovery',
-					title: mw.config.get( 'wgPageName' ),
-					format: 'json'
-				},
-				url: mw.config.get( 'wgServer' ) + mw.config.get( 'wgScriptPath' ) + '/api.php'
+			api.get( {
+				action: 'discovery',
+				title: mw.config.get( 'wgPageName' )
 			} )
-				.then( function ( response ) {
-					var discoveryDOM = mw.discovery.buildDOM( response.discovery );
-					$( '.discovery' ).append( discoveryDOM );
-					mw.discovery.trackDiscoveryEvents();
-				} );
-
+			.then( function ( response ) {
+				var discoveryDOM = mw.discovery.buildDOM( response.discovery );
+				$( '.discovery' ).append( discoveryDOM );
+				mw.discovery.trackDiscoveryEvents();
+			} );
 		} );
 	}
-
 }( mediaWiki, jQuery ) );

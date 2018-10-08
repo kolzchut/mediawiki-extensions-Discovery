@@ -6,15 +6,11 @@ class DiscoveryAPI extends ApiBase {
 
 	protected $ads = [];
 
-	protected $seeAlso = [];
-
 	protected $urls = [];
 
 	protected $config = [];
 
-	const MAX_SEE_ALSO_ITEMS = 2;
-
-	const MAX_AD_ITEMS = 2;
+	const MAX_AD_ITEMS = 4;
 
 	public function __construct( $main, $moduleName ) {
 		parent::__construct( $main, $moduleName );
@@ -42,18 +38,6 @@ class DiscoveryAPI extends ApiBase {
 			throw new InvalidArgumentException( "$title does not exist" );
 		}
 
-		// Get 'see also' item IDs
-		$seeAlsoTitleKeys = $this->getRelevantArticles( $title, self::MAX_SEE_ALSO_ITEMS );
-		if ( empty( $seeAlsoTitleKeys ) ) {
-			$this->seeAlso = [];
-		} else {
-			// Get 'see also' items by given IDs
-			$seeAlsoTitles = $this->getTitlesFromTitleStrings( $seeAlsoTitleKeys );
-
-			// Parse 'see also' items to key->value objects
-			$this->seeAlso = $this->getSeeAlsoItemData( $seeAlsoTitles );
-		}
-
 		// Get page categories
 		$categories = $this->getCategoriesByTitle( $title );
 
@@ -68,13 +52,7 @@ class DiscoveryAPI extends ApiBase {
 			$this->fillMissingAds( $this->ads, $wgPromoterFallbackCampaign, self::MAX_AD_ITEMS );
 		}
 
-		// if $this->seeAlso isn't full, fill it with ads from the General campaign
-		if ( count( $this->seeAlso ) < self::MAX_SEE_ALSO_ITEMS ) {
-			$this->fillMissingAds( $this->seeAlso, $wgPromoterFallbackCampaign, self::MAX_SEE_ALSO_ITEMS );
-		}
-
 		$result = [
-			'seeAlso' => $this->seeAlso,
 			'ads'     => $this->ads
 		];
 
@@ -99,30 +77,6 @@ class DiscoveryAPI extends ApiBase {
 		}
 
 		$adsArray = array_merge( $adsArray, $generalCampaign );
-	}
-
-	/**
-	 * getSeeAlsoItemData
-	 *
-	 * @param array $titles
-	 * @return array|bool
-	 */
-	public function getSeeAlsoItemData( array $titles ) {
-		if ( !$titles || empty( $titles ) ) {
-			return false;
-		}
-
-		$seeAlso = [];
-		foreach ( $titles as $key => $value ) {
-			$this->urls[] = $value->getFullURL();
-
-			$seeAlso[] = [
-				'content' => $value->getText(),
-				'url'     => $value->getFullURL()
-			];
-		}
-
-		return $seeAlso;
 	}
 
 	/**
@@ -201,37 +155,6 @@ class DiscoveryAPI extends ApiBase {
 	}
 
 	/**
-	 * Get relevant articles according to current page's ($title) 'read also' list
-	 *
-	 * @param Title $title
-	 * @param Int $limit
-	 * @return array
-	 */
-	public static function getRelevantArticles( Title $title, Int $limit = 2 ) {
-		$results = self::getSemanticData( $title, 'ראו גם' );
-		if ( !$results ) {
-			return null;
-		}
-		shuffle( $results );
-
-		$limit = ( count( $results ) < $limit ) ? count( $results ) : $limit;
-		$limitedKeys = array_rand( $results, $limit );
-		$data = [];
-
-		if ( is_array( $limitedKeys ) ) {
-			foreach ( $limitedKeys as $key => $value ) {
-				$data[] = $results[$key];
-			}
-		} else {
-			$data[] = $results[$limitedKeys];
-		}
-
-		$filteredData = self::removeHashes( $data );
-
-		return $filteredData;
-	}
-
-	/**
 	 * Remove hashes from each element in an array of strings, return new array
 	 *
 	 * @param array $arr
@@ -254,39 +177,6 @@ class DiscoveryAPI extends ApiBase {
 		}
 
 		return $titlesArr;
-	}
-
-	/**
-	 * getSemanticData
-	 *
-	 * @param Title $title
-	 * @param String $property
-	 * @return array
-	 */
-	public static function getSemanticData( Title $title, $property = null ) {
-		$store = SMW\StoreFactory::getStore()->getSemanticData(
-			\SMW\DIWikiPage::newFromText( $title->getText() )
-		);
-
-		$arrSMWProps = $store->getProperties();
-		$arrValues   = [];
-
-		foreach ( $arrSMWProps as $smwProp ) {
-			$arrSMWPropValues = $store->getPropertyValues( $smwProp );
-			foreach ( $arrSMWPropValues as $smwPropValue ) {
-				$arrValues[$smwProp->getLabel()][] = $smwPropValue->getSerialization();
-			}
-		}
-		// No property requested? return all semantic data
-		if ( $property === null ) {
-			return $arrValues;
-		}
-		// Property requested and data exists for it
-		if ( isset( $arrValues[$property] ) ) {
-			return $arrValues[$property];
-		}
-		// Property requested, no data exists for it
-		return null;
 	}
 
 }

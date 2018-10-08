@@ -1,8 +1,9 @@
 {
     "name": "Discovery",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "author": [
-        "Tal Koren (Interjet, Kol Zchut)"
+        "Tal Koren (Interjet, Kol Zchut)",
+	    "Dror S. [FFS] ([https://www.kolzchut.org.il Kol-Zchut])"
     ],
     "descriptionmsg": "Discovery-desc",
     "url": "https://github.com/kolzchut/mediawiki-extensions-Discovery",
@@ -18,7 +19,8 @@
     "ResourceModules": {
         "ext.discovery": {
             "scripts": "extensions/WikiRights/Discovery/modules/discovery.script.js",
-            "styles": "extensions/WikiRights/Discovery/modules/discovery.style.less"
+            "styles": "extensions/WikiRights/Discovery/modules/discovery.style.less",
+	        "dependencies": "mediawiki.api"
         }
     },
     "Hooks": {
