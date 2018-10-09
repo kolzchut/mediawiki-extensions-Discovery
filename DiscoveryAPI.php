@@ -6,7 +6,8 @@ class DiscoveryAPI extends ApiBase {
 
 	protected $ads = [];
 
-	protected $urls = [];
+	/* @param array - URLs to be excluded from further DB queries */
+	protected $excludedUrls = [];
 
 	protected $config = [];
 
@@ -44,8 +45,11 @@ class DiscoveryAPI extends ApiBase {
 		// Get campaigns based on page categories
 		$campaigns = $this->getCampaignsByCategories( $categories );
 
+		// Do not load ads that link to this very page
+		$this->excludedUrls[] = $title->getFullText();
+
 		// Get a fixed number of random ads from current active campaigns
-		$this->ads = $this->getCampaignAds( $campaigns, $this->urls, self::MAX_AD_ITEMS );
+		$this->ads = $this->getCampaignAds( $campaigns, $this->excludedUrls, self::MAX_AD_ITEMS );
 
 		// if $this->ads isn't full, fill it with ads from the General campaign
 		if ( count( $this->ads ) < self::MAX_AD_ITEMS ) {
@@ -69,7 +73,7 @@ class DiscoveryAPI extends ApiBase {
 	 */
 	private function fillMissingAds( &$adsArray, $fallbackCampaign, $limit ) {
 		$generalCampaign = $this->getCampaignAds(
-			[ $fallbackCampaign ], $this->urls, $limit - count( $adsArray )
+			[ $fallbackCampaign ], $this->excludedUrls, $limit - count( $adsArray )
 		);
 		// For potential future analytics
 		foreach ( $generalCampaign as &$ad ) {
@@ -83,23 +87,23 @@ class DiscoveryAPI extends ApiBase {
 	 * Get active ads from active campaigns, initialize them and return a normalized structure
 	 *
 	 * @param array $campaigns array of campaign names to include
-	 * @param array $ignoredUrls array of URLs to ignore (normally $this->urls)
+	 * @param array $excludedUrls array of URLs to ignore (normally $this->urls)
 	 * @param int $limit max number of ads to fetch
+	 *
 	 * @return array
 	 */
-	public function getCampaignAds( array $campaigns = [], array $ignoredUrls = [], $limit ) {
-		$adsToMap = AdCampaign::getCampaignAds( $campaigns, $ignoredUrls, $limit );
+	public function getCampaignAds( array $campaigns = [], array $excludedUrls = [], $limit ) {
+		$adsToMap = AdCampaign::getCampaignAds( $campaigns, $excludedUrls, $limit );
 		global $wgServer;
 
 		$ads = array_map( function ( $adItem ) use ( $wgServer ) {
 			$ad = Ad::fromId( $adItem->ad_id );
 
-			$url = $ad->getMainLink();
-			$url = empty( $url ) ? null : Skin::makeInternalOrExternalUrl( $ad->getMainLink() );
+			$url = $this->excludedUrls[] = $ad->getMainLink();
+			$url = empty( $url ) ? null : Skin::makeInternalOrExternalUrl( $url );
 			$url = wfExpandUrl( $url );
-			$this->urls[] = $url;
 
-			$urlType = 'internal';
+			$urlType = 'internal'; // The default URL type, unless... ->
 			$blogUrl = $this->config['blogUrl'];
 			if ( strpos( $url, $blogUrl ) !== false ) {
 				$urlType = 'blog';
