@@ -6,6 +6,8 @@
 	mw.discovery = {
 		MAX_CHARS: 85,
 		config: mw.config.get( 'wgDiscoveryConfig' ),
+		template: '<div class="discovery-item"><a class="discovery-link"><div class="discovery-tags"></div><div class="discovery-text"></div></a></div>',
+
 		buildDOM: function ( data ) {
 			var finalDOM = $( '<div></div>' );
 
@@ -50,8 +52,6 @@
 			} );
 			return currentItem;
 		},
-
-		template: '<div class="discovery-item"><a class="discovery-link"><div class="discovery-tags"></div><div class="discovery-text"></div></a></div>',
 
 		trackDiscoveryEvents: function() {
 			if ( mw.loader.getState( 'ext.googleUniversalAnalytics.utils' ) === null ) {
