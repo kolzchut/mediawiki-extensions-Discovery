@@ -3,24 +3,29 @@
 @white: #fff;
 @blue: #355a86;
 @discoveryItemBg: #ebebeb;
+@discoveryTagMargin: 18px;
+
+.discovery {
+	margin-bottom: @discoveryTagMargin + 7px;
+}
 
 .discovery-item {
     position: relative;
     background: @discoveryItemBg;
     vertical-align: top;
-	margin-bottom: 20px;
+	margin-top: @discoveryTagMargin + 7px;
 }
 
 .discovery-link {
     display: block;
     text-decoration: none !important;
-    padding: 25px 15px 25px 15px;
-    height: 100%;
+	padding: 10px 10px;
+	height: 100%;
 
     .discovery-text {
 	    color: @blue;
-	    font-weight: bold;
 		word-wrap: break-word;
+	    font-weight: 600;
 
 		.discovery-urltype {
 			display: inline-block;
@@ -41,7 +46,7 @@
 
     .discovery-tags {
 	    position: absolute;
-	    top: -18px;
+	    top: -@discoveryTagMargin;
 	    margin-left: -3px;
 
 	    span.discovery-tag {
