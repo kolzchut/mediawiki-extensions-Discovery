@@ -35,6 +35,7 @@
 				itemKeys = Object.keys( item.indicators );
 				$.each( itemKeys, function ( i, e ) {
 					if ( item.indicators[ e ] === 1 ) {
+						currentItem.addClass( 'discovery-item-with-tags' );
 						currentItem.find( '.discovery-tags' ).append( '<span class="discovery-tag discovery-tag-' + e + '"></span>' );
 					}
 				} );
