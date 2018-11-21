@@ -41,6 +41,7 @@
 				} );
 			}
 
+			currentItem.addClass( 'discovery-item-' + item.urlType );
 			currentItem.find( '.discovery-link' ).attr( 'href', item.url );
 			currentItem.find( '.discovery-text' ).text( itemText );
 
