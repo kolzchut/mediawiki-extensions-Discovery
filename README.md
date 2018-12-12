@@ -20,6 +20,8 @@ And eventually return the results as a JSON object.
 Simply execute a GET request to http://example.com/api.php?action=discovery&title=page_title&format=json
 
 ## Changelog
+### 0.3.0, 2018-12-12
+Updated design to fit skin:Helena 4.0
 ### 0.2.1, 2018-10-09
 Prevent duplicate ads
 
