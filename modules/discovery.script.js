@@ -6,6 +6,8 @@
 	mw.discovery = {
 		MAX_CHARS: 85,
 		config: mw.config.get( 'wgDiscoveryConfig' ),
+		template: '<div class="discovery-item"><a class="discovery-link"><div class="discovery-tags"></div><div class="discovery-text"></div></a></div>',
+
 		buildDOM: function ( data ) {
 			var finalDOM = $( '<div></div>' );
 
@@ -33,11 +35,13 @@
 				itemKeys = Object.keys( item.indicators );
 				$.each( itemKeys, function ( i, e ) {
 					if ( item.indicators[ e ] === 1 ) {
+						currentItem.addClass( 'discovery-item-with-tags' );
 						currentItem.find( '.discovery-tags' ).append( '<span class="discovery-tag discovery-tag-' + e + '"></span>' );
 					}
 				} );
 			}
 
+			currentItem.addClass( 'discovery-item-' + item.urlType );
 			currentItem.find( '.discovery-link' ).attr( 'href', item.url );
 			currentItem.find( '.discovery-text' ).text( itemText );
 
@@ -50,8 +54,6 @@
 			} );
 			return currentItem;
 		},
-
-		template: '<div class="discovery-item"><a class="discovery-link"><div class="discovery-tags"></div><div class="discovery-text"></div></a></div>',
 
 		trackDiscoveryEvents: function() {
 			if ( mw.loader.getState( 'ext.googleUniversalAnalytics.utils' ) === null ) {
