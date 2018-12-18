@@ -132,7 +132,7 @@ class DiscoveryAPI extends ApiBase {
 	 * @return array
 	 */
 	public function getCampaignsByCategories( $categories ) {
-		$campaigns = AdCampaign::getAllCampaignNames();
+		$campaigns = AdCampaign::getCampaignNames();
 		$campaigns = str_replace( ' ', '_', $campaigns );
 		$campaigns = array_intersect( $categories, $campaigns );
 		$result    = array_values( $campaigns );
