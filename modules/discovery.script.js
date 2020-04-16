@@ -93,7 +93,8 @@
 		}
 	};
 
-	if ( mw.config.get( 'wgCanonicalNamespace' ) !== 'Special' ) {
+	// wgArticleId is 0 for special pages and nonexistent pages
+	if ( mw.config.get( 'wgArticleId' ) > 0 ) {
 		$( document ).ready( function () {
 			api.get( {
 				action: 'discovery',
