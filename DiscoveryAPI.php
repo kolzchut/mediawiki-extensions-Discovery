@@ -21,8 +21,11 @@ class DiscoveryAPI extends ApiBase {
 		return [
 			'title' => [
 				ApiBase::PARAM_TYPE => 'string',
-				ApiBase::PARAM_REQUIRED => true
-			]
+				ApiBase::PARAM_DEPRECATED => true,
+			],
+			'pageid' => [
+				ApiBase::PARAM_TYPE => 'integer',
+			],
 		];
 	}
 
@@ -33,10 +36,13 @@ class DiscoveryAPI extends ApiBase {
 		$this->config = $wgDiscoveryConfig;
 		$queryResult  = $this->getResult();
 		$params       = $this->extractRequestParams();
-		$title        = Title::newFromText( $params['title'] );
 
+		$title = $this->getTitleFromTitleOrPageId( $params );
+
+		// This can only happen when "title" is passed -
+		// "pageid" is already checked for existence in getTitleOrPageId()
 		if ( !$title->exists() ) {
-			throw new InvalidArgumentException( "$title does not exist" );
+			$this->dieWithError( [ 'apierror-missingtitle-byname', wfEscapeWikiText( $params['title'] ) ] );
 		}
 
 		// Get page categories
@@ -57,7 +63,7 @@ class DiscoveryAPI extends ApiBase {
 		}
 
 		$result = [
-			'ads'     => $this->ads
+			'ads' => $this->ads
 		];
 
 		$queryResult->addValue( null, 'discovery', $result );
@@ -92,7 +98,7 @@ class DiscoveryAPI extends ApiBase {
 	 *
 	 * @return array
 	 */
-	public function getCampaignAds( array $campaigns = [], array $excludedUrls = [], $limit ) {
+	public function getCampaignAds( array $campaigns = [], array $excludedUrls = [], $limit = 2 ) {
 		$adsToMap = AdCampaign::getCampaignAds( $campaigns, $excludedUrls, $limit );
 		global $wgServer;
 

@@ -98,13 +98,13 @@
 		$( document ).ready( function () {
 			api.get( {
 				action: 'discovery',
-				title: mw.config.get( 'wgPageName' )
+				pageid: mw.config.get( 'wgArticleId' )
 			} )
-			.then( function ( response ) {
-				var discoveryDOM = mw.discovery.buildDOM( response.discovery );
-				$( '.discovery' ).append( discoveryDOM );
-				mw.discovery.trackDiscoveryEvents();
-			} );
+				.then( function ( response ) {
+					var discoveryDOM = mw.discovery.buildDOM( response.discovery );
+					$( '.discovery' ).append( discoveryDOM );
+					mw.discovery.trackDiscoveryEvents();
+				} );
 		} );
 	}
 }( mediaWiki, jQuery ) );
