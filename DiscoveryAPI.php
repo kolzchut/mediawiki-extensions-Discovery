@@ -1,5 +1,7 @@
 <?php
 
+use MediaWiki\Extension\Promoter\Ad;
+use MediaWiki\Extension\Promoter\AdCampaign;
 use MediaWiki\MediaWikiServices;
 
 class DiscoveryAPI extends ApiBase {
@@ -29,6 +31,9 @@ class DiscoveryAPI extends ApiBase {
 	public function execute() {
 		global $wgPromoterFallbackCampaign;
 		global $wgDiscoveryConfig;
+
+		$this->getMain()->setCacheMaxAge( 300 ); // Allow short caching
+
 
 		$this->config = $wgDiscoveryConfig;
 		$queryResult  = $this->getResult();
@@ -92,7 +97,7 @@ class DiscoveryAPI extends ApiBase {
 	 *
 	 * @return array
 	 */
-	public function getCampaignAds( array $campaigns = [], array $excludedUrls = [], $limit ) {
+	public function getCampaignAds( array $campaigns = [], array $excludedUrls = [], $limit = self::MAX_AD_ITEMS ) {
 		$adsToMap = AdCampaign::getCampaignAds( $campaigns, $excludedUrls, $limit );
 		global $wgServer;
 
@@ -152,7 +157,7 @@ class DiscoveryAPI extends ApiBase {
 
 		$categories = array_keys( $categories );
 		$categories = array_map( function ( $item ) use ( $titleParser ) {
-			return $titleParser->parseTitle( $item, NS_MAIN )->getDBkey();
+			return $titleParser->parseTitle( $item )->getDBkey();
 		}, $categories );
 
 		return empty( $categories ) ? [] : $categories;
