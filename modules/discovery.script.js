@@ -6,6 +6,7 @@
 	mw.discovery = {
 		MAX_CHARS: 85,
 		config: mw.config.get( 'wgDiscoveryConfig' ),
+		disabled: mw.config.get('discovery-disabled'),
 		template: '<div class="discovery-item"><a class="discovery-link"><div class="discovery-tags"></div><div class="discovery-text"></div></a></div>',
 
 		buildDOM: function ( data ) {
@@ -94,7 +95,7 @@
 	};
 
 	// wgArticleId is 0 for special pages and nonexistent pages
-	if ( mw.config.get( 'wgArticleId' ) > 0 ) {
+	if ( mw.config.get( 'wgArticleId' ) > 0 && !mw.discovery.disabled) {
 		$( document ).ready( function () {
 			api.get( {
 				action: 'discovery',

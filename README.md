@@ -17,9 +17,15 @@ And eventually return the results as a JSON object.
 
 ## How to use
 
-Simply execute a GET request to http://example.com/api.php?action=discovery&title=page_title&format=json
+1. Use the tag `<discovery>` to get the component in the text
+2. Add `<div class="discovery"></div>` in the desired location and add RL module `ext.discovery` yourself
+3. Execute a GET request to `https://example.com/api.php?action=discovery&title=page_title&format=json` and create your own component/UI
+
+To disable the component on a specific page, use parser function `{{#disable_discovery:}}`
 
 ## Changelog
+### 0.4.0, 2023-04-03
+Add parser function `{{#disable_discovery:}}`
 ### 0.3.0, 2018-12-12
 Updated design to fit skin:Helena 4.0
 ### 0.2.1, 2018-10-09

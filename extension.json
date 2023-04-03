@@ -31,7 +31,8 @@
     },
     "Hooks": {
         "ResourceLoaderGetConfigVars": "DiscoveryHooks::onResourceLoaderGetConfigVars",
-        "ParserFirstCallInit": "DiscoveryHooks::onParserFirstCallInit"
+        "ParserFirstCallInit": "DiscoveryHooks::onParserFirstCallInit",
+	    "OutputPageParserOutput": "DiscoveryHooks::onOutputPageParserOutput"
     },
     "config": {
         "DiscoveryConfig": {
@@ -44,6 +45,9 @@
 		"Discovery": [
 			"i18n"
 		]
+	},
+	"ExtensionMessagesFiles": {
+		"DiscoveryMagic": "Discovery.i18n.magic.php"
 	},
     "manifest_version": 1
 }
