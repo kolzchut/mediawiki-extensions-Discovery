@@ -1,31 +1,27 @@
 ( function ( mw, $ ) {
 	'use strict';
 
-	var api = new mw.Api();
+	var discovery,
+		api = new mw.Api();
 
-	mw.discovery = {
+	mw.discovery = discovery = {
 		MAX_CHARS: 85,
 		config: mw.config.get( 'wgDiscoveryConfig' ),
 		disabled: mw.config.get('discovery-disabled'),
 		template: '<div class="discovery-item"><a class="discovery-link"><div class="discovery-tags"></div><div class="discovery-text"></div></a></div>',
 
 		buildDOM: function ( data ) {
-			var finalDOM = $( '<div></div>' );
+			var $items = $([]);
 
 			if ( !data ) {
 				return;
 			}
 
 			$.each( data.ads, function ( i, e ) {
-				var item = this.buildDiscoveryItem( e );
-				if ( i === 0 ) {
-					finalDOM.prepend( item );
-				} else {
-					finalDOM.append( item );
-				}
-			}.bind( this ) );
+				$items = $items.add( discovery.buildDiscoveryItem( e ) );
+			} )
 
-			return finalDOM;
+			return $items;
 		},
 		buildDiscoveryItem: function ( item ) {
 			var currentItem = $( this.template ),
