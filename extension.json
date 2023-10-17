@@ -1,6 +1,6 @@
 {
     "name": "Discovery",
-    "version": "0.3.0",
+    "version": "0.5.0",
     "author": [
         "Tal Koren (Interjet, Kol Zchut)",
 	    "Dror S. [FFS] ([https://www.kolzchut.org.il Kol-Zchut])"
@@ -38,7 +38,8 @@
         "DiscoveryConfig": {
             "trackImpressions": true,
 			"trackClicks": true,
-			"blogUrl": "blog.kolzchut.org.il"
+			"blogUrl": "blog.kolzchut.org.il",
+	        "priorityCategories": null
         }
     },
 	"MessagesDirs": {

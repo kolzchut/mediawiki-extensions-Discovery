@@ -29,13 +29,11 @@ class DiscoveryAPI extends ApiBase {
 	}
 
 	public function execute() {
-		global $wgPromoterFallbackCampaign;
-		global $wgDiscoveryConfig;
+		$fallbackCampaign = $this->getConfig()->get( 'PromoterFallbackCampaign' );
+		$this->config = $this->getConfig()->get( 'DiscoveryConfig' );
+		// Allow short caching
+		$this->getMain()->setCacheMaxAge( 300 );
 
-		$this->getMain()->setCacheMaxAge( 300 ); // Allow short caching
-
-
-		$this->config = $wgDiscoveryConfig;
 		$queryResult  = $this->getResult();
 		$params       = $this->extractRequestParams();
 		$title        = Title::newFromText( $params['title'] );
@@ -47,6 +45,17 @@ class DiscoveryAPI extends ApiBase {
 		// Get page categories
 		$categories = $this->getCategoriesByTitle( $title );
 
+		$shouldPrioritizeCategories = is_array( $this->config['priorityCategories'] );
+
+		if ( $shouldPrioritizeCategories ) {
+			$this->config['priorityCategories'] = str_replace( ' ', '_', $this->config['priorityCategories'] );
+			foreach ( $categories as $category ) {
+				if ( in_array( $category, $this->config[ 'priorityCategories' ] ) ) {
+					$categories = [ $category ];
+					break;
+				}
+			}
+		}
 		// Get campaigns based on page categories
 		$campaigns = $this->getCampaignsByCategories( $categories );
 
@@ -56,9 +65,9 @@ class DiscoveryAPI extends ApiBase {
 		// Get a fixed number of random ads from current active campaigns
 		$this->ads = $this->getCampaignAds( $campaigns, $this->excludedUrls, self::MAX_AD_ITEMS );
 
+		if ( !$shouldPrioritizeCategories && count( $this->ads ) < self::MAX_AD_ITEMS ) {
 		// if $this->ads isn't full, fill it with ads from the General campaign
-		if ( count( $this->ads ) < self::MAX_AD_ITEMS ) {
-			$this->fillMissingAds( $this->ads, $wgPromoterFallbackCampaign, self::MAX_AD_ITEMS );
+			$this->fillMissingAds( $this->ads, $fallbackCampaign, self::MAX_AD_ITEMS );
 		}
 
 		$result = [
@@ -138,7 +147,10 @@ class DiscoveryAPI extends ApiBase {
 	 */
 	public function getCampaignsByCategories( $categories ) {
 		$campaigns = AdCampaign::getCampaignNames();
+
+		// Make sure the names of categories and campaigns are formatted as db_keys
 		$campaigns = str_replace( ' ', '_', $campaigns );
+		$categories = str_replace( ' ', '_', $categories );
 		$campaigns = array_intersect( $categories, $campaigns );
 		$result    = array_values( $campaigns );
 
