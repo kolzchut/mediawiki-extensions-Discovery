@@ -44,20 +44,13 @@ class DiscoveryAPI extends ApiBase {
 
 		// Get page categories
 		$categories = $this->getCategoriesByTitle( $title );
+		$this->config['priorityCategories'] = str_replace( ' ', '_', $this->config['priorityCategories'] );
+		$prioritizedCategories = array_intersect( (array)$this->config['priorityCategories'], $categories );
 
-		$shouldPrioritizeCategories = is_array( $this->config['priorityCategories'] );
+		$shouldPrioritizeCategories = count( $prioritizedCategories ) > 0;
 
-		if ( $shouldPrioritizeCategories ) {
-			$this->config['priorityCategories'] = str_replace( ' ', '_', $this->config['priorityCategories'] );
-			foreach ( $categories as $category ) {
-				if ( in_array( $category, $this->config[ 'priorityCategories' ] ) ) {
-					$categories = [ $category ];
-					break;
-				}
-			}
-		}
 		// Get campaigns based on page categories
-		$campaigns = $this->getCampaignsByCategories( $categories );
+		$campaigns = $this->getCampaignsByCategories( $shouldPrioritizeCategories ? $prioritizedCategories : $categories );
 
 		// Do not load ads that link to this very page
 		$this->excludedUrls[] = $title->getFullText();
@@ -71,7 +64,7 @@ class DiscoveryAPI extends ApiBase {
 		}
 
 		$result = [
-			'ads'     => $this->ads
+			'ads' => $this->ads
 		];
 
 		$queryResult->addValue( null, 'discovery', $result );

@@ -12,12 +12,12 @@ It also provides its own widget, with a `<discovery>` tag, to display those.
 ## Configuration
 All of the configuration is done under `$wgDiscoveryConfig`:
 
-| Option             | Values     | Comments                                                                                                                                                                                                                                         |
-|--------------------|------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| trackImpressions   | true/false |                                                                                                                                                                                                                                                  |
-| trackClicks        | true/false |                                                                                                                                                                                                                                                  |
-| blogUrl            | Url        | Allows recognizing promoter ads that lead to the blog                                                                                                                                                                                            |
-| priorityCategories | null/[]    | An array of category names. If any of these categories are present on the page, ads will *only* be fetched from them. The priority is also determined by the order of the array, so that the first entry will take precedence over any following |
+| Option             | Values     | Comments                                                                                                              |
+|--------------------|------------|-----------------------------------------------------------------------------------------------------------------------|
+| trackImpressions   | true/false |                                                                                                                       |
+| trackClicks        | true/false |                                                                                                                       |
+| blogUrl            | Url        | Allows recognizing promoter ads that lead to the blog                                                                 |
+| priorityCategories | null/[]    | An array of category names. If any of these categories are present on the page, ads will *only* be fetched from them. |
 
 ## How to use
 You can do either of the following:
