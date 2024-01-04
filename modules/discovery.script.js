@@ -98,7 +98,14 @@
 				title: mw.config.get( 'wgPageName' )
 			} )
 			.then( function ( response ) {
-				var discoveryDOM = mw.discovery.buildDOM( response.discovery );
+				var discoveryDOM;
+
+				if ( response.discovery.ads.length === 0 ) {
+					$( '.discovery-wrapper, .discovery' ).addClass( 'discovery-no-ads' );
+					return;
+				}
+
+				discoveryDOM= mw.discovery.buildDOM( response.discovery );
 				$( '.discovery' ).append( discoveryDOM );
 				mw.discovery.trackDiscoveryEvents();
 			} );
