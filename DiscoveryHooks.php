@@ -15,8 +15,8 @@ class DiscoveryHooks {
 	 * @return string|array
 	 */
 	public static function renderTagDiscovery( string $input, array $args, Parser $parser ) {
-		if ( !$parser->getOutput()->getProperty( 'discovery-disabled' ) ) {
-			$parser->getOutput()->addModules( 'ext.discovery' );
+		if ( !$parser->getOutput()->getPageProperty( 'discovery-disabled' ) ) {
+			$parser->getOutput()->addModules( [ 'ext.discovery' ] );
 			return self::getDiscoveryHTML();
 		}
 
@@ -28,7 +28,7 @@ class DiscoveryHooks {
 	 * @param string $text
 	 */
 	public static function parserFunctionDisableDiscovery( Parser $parser, string $text ) {
-		$parser->getOutput()->setProperty( 'discovery-disabled', true );
+		$parser->getOutput()->setPageProperty( 'discovery-disabled', true );
 		$parser->getOutput()->addJsConfigVars( 'discovery-disabled', true );
 	}
 
@@ -67,7 +67,7 @@ class DiscoveryHooks {
 	 * @param ParserOutput $parserOutput
 	 */
 	static public function onOutputPageParserOutput( &$out, $parserOutput ) : void {
-		$out->setProperty( 'discovery-disabled', $parserOutput->getProperty( 'discovery-disabled' ) );
+		$out->setProperty( 'discovery-disabled', $parserOutput->getPageProperty( 'discovery-disabled' ) );
 	}
 
 }
