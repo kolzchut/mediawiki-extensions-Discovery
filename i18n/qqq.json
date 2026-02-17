@@ -1,7 +1,7 @@
 {
 	"@metadata": {
-		"authors": [
-		]
-	}
-
+		"authors": []
+	},
+	"discovery-desc": "{{desc|name=Discovery|url=https://github.com/kolzchut/mediawiki-extensions-Discovery}}",
+	"discovery-component-title": "The title of the component"
 }

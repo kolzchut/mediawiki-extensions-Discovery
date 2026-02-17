@@ -1,34 +1,53 @@
 <?php
+/**
+ * @license MIT
+ * @file
+ */
 
+namespace MediaWiki\Extension\Discovery\Api;
+
+use ApiBase;
+use InvalidArgumentException;
 use MediaWiki\Extension\Promoter\Ad;
 use MediaWiki\Extension\Promoter\AdCampaign;
+use MediaWiki\Extension\Promoter\AdDataException;
+use MediaWiki\Extension\Promoter\AdExistenceException;
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Title\MalformedTitleException;
+use Skin;
+use Title;
+use Wikimedia\ParamValidator\ParamValidator;
+use Wikimedia\Timestamp\TimestampException;
 
 class DiscoveryAPI extends ApiBase {
 
+	/** @var array */
 	protected $ads = [];
 
-	/* @param array - URLs to be excluded from further DB queries */
+	/** @var array URLs to be excluded from further DB queries */
 	protected $excludedUrls = [];
 
+	/** @var array */
 	protected $config = [];
 
-	const MAX_AD_ITEMS = 4;
+	private const MAX_AD_ITEMS = 4;
 
-	public function __construct( $main, $moduleName ) {
-		parent::__construct( $main, $moduleName );
-	}
-
+	/**
+	 * @inheritDoc
+	 */
 	protected function getAllowedParams() {
 		return [
 			'title' => [
-				ApiBase::PARAM_TYPE => 'string',
-				ApiBase::PARAM_REQUIRED => true
+				ParamValidator::PARAM_TYPE => 'string',
+				ParamValidator::PARAM_REQUIRED => true
 			]
 		];
 	}
 
-	public function execute() {
+	/**
+	 * @inheritDoc
+	 */
+	public function execute(): void {
 		$fallbackCampaign = $this->getConfig()->get( 'PromoterFallbackCampaign' );
 		$this->config = $this->getConfig()->get( 'DiscoveryConfig' );
 		// Allow short caching
@@ -50,13 +69,15 @@ class DiscoveryAPI extends ApiBase {
 		$shouldPrioritizeCategories = count( $prioritizedCategories ) > 0;
 
 		// Get campaigns based on page categories
-		$campaigns = $this->getCampaignsByCategories( $shouldPrioritizeCategories ? $prioritizedCategories : $categories );
+		$campaigns = $this->getCampaignsByCategories(
+			$shouldPrioritizeCategories ? $prioritizedCategories : $categories
+		);
 
 		// Do not load ads that link to this very page
 		$this->excludedUrls[] = $title->getFullText();
 
 		// Get a fixed number of random ads from current active campaigns
-		$this->ads = $this->getCampaignAds( $campaigns, $this->excludedUrls, self::MAX_AD_ITEMS );
+		$this->ads = $this->getCampaignAds( $campaigns, $this->excludedUrls );
 
 		if ( !$shouldPrioritizeCategories && count( $this->ads ) < self::MAX_AD_ITEMS ) {
 		// if $this->ads isn't full, fill it with ads from the General campaign
@@ -78,7 +99,7 @@ class DiscoveryAPI extends ApiBase {
 	 * @param int $limit Ad limit
 	 * @return void
 	 */
-	private function fillMissingAds( &$adsArray, $fallbackCampaign, $limit ) {
+	private function fillMissingAds( &$adsArray, $fallbackCampaign, $limit ): void {
 		$generalCampaign = $this->getCampaignAds(
 			[ $fallbackCampaign ], $this->excludedUrls, $limit - count( $adsArray )
 		);
@@ -98,23 +119,34 @@ class DiscoveryAPI extends ApiBase {
 	 * @param int $limit max number of ads to fetch
 	 *
 	 * @return array
+	 * @throws \MWException
+	 * @throws AdDataException
+	 * @throws AdExistenceException
+	 * @throws TimestampException
 	 */
-	public function getCampaignAds( array $campaigns = [], array $excludedUrls = [], $limit = self::MAX_AD_ITEMS ) {
+	public function getCampaignAds(
+		array $campaigns = [],
+		array $excludedUrls = [],
+		$limit = self::MAX_AD_ITEMS
+	) {
 		$adsToMap = AdCampaign::getCampaignAds( $campaigns, $excludedUrls, $limit );
-		global $wgServer;
+		$services = MediaWikiServices::getInstance();
+		$config = $services->getMainConfig();
+		$server = $config->get( 'Server' );
 
-		$ads = array_map( function ( $adItem ) use ( $wgServer ) {
+		$ads = array_map( function ( $adItem ) use ( $server ) {
 			$ad = Ad::fromId( $adItem->ad_id );
 
 			$url = $this->excludedUrls[] = $ad->getMainLink();
 			$url = empty( $url ) ? null : Skin::makeInternalOrExternalUrl( $url );
-			$url = wfExpandUrl( $url );
+			$url = MediaWikiServices::getInstance()->getUrlUtils()->expand( $url );
 
-			$urlType = 'internal'; // The default URL type, unless... ->
+			// The default URL type, unless... ->
+			$urlType = 'internal';
 			$blogUrl = $this->config['blogUrl'];
-			if ( strpos( $url, $blogUrl ) !== false ) {
+			if ( str_contains( $url, $blogUrl ) ) {
 				$urlType = 'blog';
-			} elseif ( strpos( $url, $wgServer ) === false ) {
+			} elseif ( !str_contains( $url, $server ) ) {
 				$urlType = 'external';
 			}
 
@@ -138,7 +170,7 @@ class DiscoveryAPI extends ApiBase {
 	 * @param array $categories
 	 * @return array
 	 */
-	public function getCampaignsByCategories( $categories ) {
+	public function getCampaignsByCategories( $categories ): array {
 		$campaigns = AdCampaign::getCampaignNames();
 
 		// Make sure the names of categories and campaigns are formatted as db_keys
@@ -155,13 +187,14 @@ class DiscoveryAPI extends ApiBase {
 	 *
 	 * @param Title $title
 	 * @return array
+	 * @throws MalformedTitleException
 	 */
-	public function getCategoriesByTitle( Title $title ) {
+	public function getCategoriesByTitle( Title $title ): array {
 		$categories = $title->getParentCategories();
 		$titleParser = MediaWikiServices::getInstance()->getTitleParser();
 
 		$categories = array_keys( $categories );
-		$categories = array_map( function ( $item ) use ( $titleParser ) {
+		$categories = array_map( static function ( $item ) use ( $titleParser ) {
 			return $titleParser->parseTitle( $item )->getDBkey();
 		}, $categories );
 
@@ -174,11 +207,12 @@ class DiscoveryAPI extends ApiBase {
 	 * @param array $arr
 	 * @return array
 	 */
-	public static function removeHashes( array $arr ) {
-		return array_map( function ( $item ) {
+	public static function removeHashes( array $arr ): array {
+		return array_map( static function ( $item ) {
 			return preg_replace( '/#\d+#/', '', $item );
 		}, $arr );
 	}
+
 	/**
 	 * @param array $strings
 	 * @return array

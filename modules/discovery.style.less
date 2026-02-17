@@ -13,10 +13,10 @@
 }
 
 .discovery-item {
-    position: relative;
-    background: @discoveryItemBg;
-    vertical-align: top;
-	margin-top: @discoveryItemMargin ;
+	position: relative;
+	background: @discoveryItemBg;
+	vertical-align: top;
+	margin-top: @discoveryItemMargin;
 }
 
 .discovery-item-with-tags {
@@ -24,15 +24,15 @@
 }
 
 .discovery-link {
-    display: block;
-    text-decoration: none !important;
+	display: block;
+	text-decoration: none !important;
 	padding: 10px 10px;
 	height: 100%;
 
-    .discovery-text {
-	    color: @blue;
+	.discovery-text {
+		color: @blue;
 		word-wrap: break-word;
-	    font-weight: 600;
+		font-weight: 600;
 
 		.discovery-urltype {
 			display: inline-block;
@@ -42,33 +42,32 @@
 			margin: 0 0 0 4px;
 
 			&-blog {
-				background-image('../assets/images/blog_icon.svg');
+				background-image: url( ../assets/images/blog_icon.svg );
 			}
 
 			&-external {
-				background-image('../assets/images/link_icon.svg');
+				background-image: url( ../assets/images/link_icon.svg );
 			}
 		}
-    }
+	}
 
-    .discovery-tags {
-	    position: absolute;
-	    top: -@discoveryTagMargin;
-	    left: 3px;
+	.discovery-tags {
+		position: absolute;
+		top: -@discoveryTagMargin;
+		left: 3px;
 
-	    span.discovery-tag {
-		    width: 37px;
-		    height: 35px;
-		    display: inline-block;
-	    }
+		span.discovery-tag {
+			width: 37px;
+			height: 35px;
+			display: inline-block;
+		}
 
-	    span.discovery-tag-new {
-			background-image( '../assets/images/indicators/new.png' );
-		    background-color: transparent;
-		    background-repeat: no-repeat;
-		    background-attachment: scroll;
-		    background-position: center;
-	    }
-    }
+		span.discovery-tag-new {
+			background-image: url( ../assets/images/indicators/new.png );
+			background-color: transparent;
+			background-repeat: no-repeat;
+			background-attachment: scroll;
+			background-position: center;
+		}
+	}
 }
-

@@ -1,47 +1,55 @@
 {
-    "name": "Discovery",
-    "version": "0.5.0",
-    "author": [
-        "Tal Koren (Interjet, Kol Zchut)",
-	    "Dror S. [FFS] ([https://www.kolzchut.org.il Kol-Zchut])"
-    ],
-    "descriptionmsg": "Discovery-desc",
-    "url": "https://github.com/kolzchut/mediawiki-extensions-Discovery",
-    "license-name": "MIT",
-    "type": "other",
+	"name": "Discovery",
+	"version": "0.5.0",
+	"author": [
+		"Tal Koren (Interjet, Kol Zchut)",
+		"Dror S. [FFS] ([https://www.kolzchut.org.il Kol-Zchut])"
+	],
+	"descriptionmsg": "Discovery-desc",
+	"url": "https://github.com/kolzchut/mediawiki-extensions-Discovery",
+	"license-name": "MIT",
+	"type": "other",
 	"requires": {
-		"MediaWiki": ">= 1.31",
+		"MediaWiki": ">= 1.43",
 		"extensions": {
 			"Promoter": ">= 1.0.0"
 		}
 	},
-    "AutoloadClasses": {
-        "DiscoveryAPI": "DiscoveryAPI.php",
-        "DiscoveryHooks": "DiscoveryHooks.php"
-    },
-    "APIModules": {
-        "discovery": "DiscoveryAPI"
-    },
-    "ResourceModules": {
-        "ext.discovery": {
-            "scripts": "extensions/WikiRights/Discovery/modules/discovery.script.js",
-            "styles": "extensions/WikiRights/Discovery/modules/discovery.style.less",
-	        "dependencies": "mediawiki.api"
-        }
-    },
-    "Hooks": {
-        "ResourceLoaderGetConfigVars": "DiscoveryHooks::onResourceLoaderGetConfigVars",
-        "ParserFirstCallInit": "DiscoveryHooks::onParserFirstCallInit",
-	    "OutputPageParserOutput": "DiscoveryHooks::onOutputPageParserOutput"
-    },
-    "config": {
-        "DiscoveryConfig": {
-            "trackImpressions": true,
-			"trackClicks": true,
-			"blogUrl": "blog.kolzchut.org.il",
-	        "priorityCategories": null
-        }
-    },
+	"AutoloadNamespaces": {
+		"MediaWiki\\Extension\\Discovery\\": "src/"
+	},
+	"APIModules": {
+		"discovery": "MediaWiki\\Extension\\Discovery\\Api\\DiscoveryAPI"
+	},
+	"HookHandlers": {
+		"DiscoveryHooks": {
+			"class": "MediaWiki\\Extension\\Discovery\\Hooks"
+		}
+	},
+	"ResourceModules": {
+		"ext.discovery": {
+			"localBasePath": "modules",
+			"remoteExtPath": "WikiRights/Discovery/modules",
+			"scripts": "discovery.script.js",
+			"styles": "discovery.style.less",
+			"dependencies": "mediawiki.api"
+		}
+	},
+	"Hooks": {
+		"ResourceLoaderGetConfigVars": "DiscoveryHooks",
+		"ParserFirstCallInit": "DiscoveryHooks",
+		"OutputPageParserOutput": "DiscoveryHooks"
+	},
+	"config": {
+		"DiscoveryConfig": {
+			"value": {
+				"trackImpressions": true,
+				"trackClicks": true,
+				"blogUrl": "blog.kolzchut.org.il",
+				"priorityCategories": null
+			}
+		}
+	},
 	"MessagesDirs": {
 		"Discovery": [
 			"i18n"
@@ -50,5 +58,5 @@
 	"ExtensionMessagesFiles": {
 		"DiscoveryMagic": "Discovery.i18n.magic.php"
 	},
-    "manifest_version": 1
+	"manifest_version": 2
 }

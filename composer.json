@@ -1,26 +1,28 @@
 {
-	"name": "kolzchut/altlangrellinks",
+	"name": "kolzchut/discovery",
 	"type": "mediawiki-extension",
-	"description": "Adds alternate language link elements for each inter-language link to improve SEO",
+	"description": "Discovery extension for MediaWiki - provides content recommendations and discovery features",
 	"keywords": [
 		"mediawiki",
 		"extension",
-		"seo",
-		"hreflang",
-		"multilingual",
-		"i18n"
+		"discovery",
+		"recommendations"
 	],
-	"homepage": "https://github.com/kolzchut/mediawiki-extensions-AltLangRelLinks",
-	"license": "GPL-2.0-or-later",
+	"homepage": "https://github.com/kolzchut/mediawiki-extensions-Discovery",
+	"license": "MIT",
 	"authors": [
+		{
+			"name": "Tal Koren",
+			"role": "Developer"
+		},
 		{
 			"name": "Dror S.",
 			"role": "Developer"
 		}
 	],
 	"support": {
-		"issues": "https://github.com/kolzchut/mediawiki-extensions-AltLangRelLinks/issues",
-		"source": "https://github.com/kolzchut/mediawiki-extensions-AltLangRelLinks"
+		"issues": "https://github.com/kolzchut/mediawiki-extensions-Discovery/issues",
+		"source": "https://github.com/kolzchut/mediawiki-extensions-Discovery"
 	},
 	"require-dev": {
 		"mediawiki/mediawiki-codesniffer": "49.0.0",

@@ -13,11 +13,50 @@ It also provides its own widget, with a `<discovery>` tag, to display those.
 All of the configuration is done under `$wgDiscoveryConfig`:
 
 | Option             | Values     | Comments                                                                                                              |
-|--------------------|------------|-----------------------------------------------------------------------------------------------------------------------|
+|--------------------|------------|-------------------------------------------------------|--|
 | trackImpressions   | true/false |                                                                                                                       |
 | trackClicks        | true/false |                                                                                                                       |
 | blogUrl            | Url        | Allows recognizing promoter ads that lead to the blog                                                                 |
 | priorityCategories | null/[]    | An array of category names. If any of these categories are present on the page, ads will *only* be fetched from them. |
+
+## Events
+This extension emits MediaWiki tracking events via `mw.track()` that can be monitored by analytics systems or other event listeners:
+
+### Event: `discovery.impression`
+Fired when a discovery ad is displayed on the page.
+
+**Requirements:** `trackImpressions` must be set to `true` in `$wgDiscoveryConfig`.
+
+**Data:**
+- `name` (string): The identifier/name of the displayed ad
+- `position` (number): The ordinal position of the ad (1-based index)
+
+**Example:**
+```javascript
+mw.trackSubscribe('discovery.impression', function(topic, data) {
+    console.log('Ad shown:', data.name, 'Position:', data.position);
+});
+```
+
+### Event: `discovery.click`
+Fired when a user clicks on a discovery ad.
+
+**Requirements:** `trackClicks` must be set to `true` in `$wgDiscoveryConfig`.
+
+**Data:**
+- `name` (string): The identifier/name of the clicked ad
+- `position` (number): The ordinal position of the ad (1-based index)
+
+**Example:**
+```javascript
+mw.trackSubscribe('discovery.click', function(topic, data) {
+    console.log('Ad clicked:', data.name, 'Position:', data.position);
+});
+```
+
+## Analytics Integration with GoogleTagManager
+
+For automatic tracking of Discovery events in Google Analytics or other analytics systems, use the [GoogleTagManager extension](https://github.com/kolzchut/mediawiki-extensions-GoogleTagManager).
 
 ## How to use
 You can do either of the following:
