@@ -67,6 +67,15 @@ You can do either of the following:
 If using the 1st or 2nd option, you can disable the component on a specific page by using the parser function `{{#disable_discovery:}}`
 
 ## Changelog
+### 0.6.0, 2026-02-17
+Modernize for MediaWiki 1.43+:
+- Add PHP namespaces (`MediaWiki\Extension\Discovery\`)
+- Move classes to `src/` directory structure
+- Implement modern hook interfaces
+- Update extension.json with HookHandlers and AutoloadNamespaces
+- Replace static hook methods with instance methods
+- Remove global variable usage in favor of injected configuration
+
 ### 0.5.0, 2023-10-16
 Add configuration for prioritizedCategories
 ### 0.4.0, 2023-04-03
