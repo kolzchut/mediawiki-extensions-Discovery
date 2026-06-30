@@ -46,8 +46,8 @@ class Hooks implements
 	 * @param string $text
 	 */
 	public function parserFunctionDisableDiscovery( Parser $parser, string $text ) {
-		$parser->getOutput()->setPageProperty( 'discovery-disabled', true );
-		$parser->getOutput()->addJsConfigVars( 'discovery-disabled', true );
+		$parser->getOutput()->setUnsortedPageProperty( 'discovery-disabled', '1' );
+		$parser->getOutput()->setJsConfigVar( 'discovery-disabled', true );
 	}
 
 	/**
